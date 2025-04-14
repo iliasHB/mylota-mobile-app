@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../controller/sleep_schedule_controller.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
 import '../utils/styles.dart';
 
@@ -31,45 +32,10 @@ class _SleepGoalState extends State<SleepGoal> {
         }
       });
       if(_bedTime != null && _wakeTime != null){
-        _saveSleepGoal(_bedTime, _wakeTime);
+        SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
       }
     }
   }
-
-
-  Future<void> _saveSleepGoal(TimeOfDay? bedTime, TimeOfDay? wakeTime) async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print("User not logged in!");
-        return;
-      }
-      // String bed_time = '${bedTime!.hour}:${bedTime.minute}';
-      // String wake_time = '${wakeTime!.hour}:${wakeTime.minute}';
-      String bed_time = bedTime!.format(context);   // Proper AM/PM format
-      String wake_time = wakeTime!.format(context); // Proper AM/PM format
-      await FirebaseFirestore.instance
-          .collection('bed-time-schedule')
-          .doc(user.uid)
-          .set({
-        'bed-time': bed_time,
-        'wakeup-time': wake_time,
-        'createdAt': DateTime.now().toIso8601String(),
-      });
-      Provider.of<SleepTimerProvider>(context, listen: false)
-          .startDailySleepTimer(_bedTime!, _wakeTime!);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Sleeping schedule saved successfully!')),
-      );
-    } catch (e) {
-      print("Error saving goal: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save schedule!')),
-      );
-    }
-  }
-
 
 
   @override

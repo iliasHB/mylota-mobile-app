@@ -54,7 +54,7 @@ class NotificationService {
       enableVibration: true,
       fullScreenIntent: true, // Opens the app like an alarm
       ongoing: true, // Keeps the notification active until dismissed
-      autoCancel: false, // Prevents auto-dismiss when tapped
+      autoCancel: true, // Prevents auto-dismiss when tapped
       visibility: NotificationVisibility.public,
     );
 
@@ -83,7 +83,7 @@ class NotificationService {
       enableVibration: true,
       fullScreenIntent: true, // Opens the app like an alarm
       ongoing: true, // Keeps the notification active until dismissed
-      autoCancel: false, // Prevents auto-dismiss when tapped
+      autoCancel: true, // Prevents auto-dismiss when tapped
       visibility: NotificationVisibility.public,
     );
 

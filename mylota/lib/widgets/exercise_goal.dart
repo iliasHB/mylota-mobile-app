@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
+import '../controller/exercise_schedule_controller.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
@@ -98,37 +99,7 @@ class _ExerciseGoalState extends State<ExerciseGoal> {
     );
   }
 
-  Future<void> _saveExerciseGoal() async {
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print("User not logged in!");
-        return;
-      }
 
-      await FirebaseFirestore.instance
-          .collection('exercise-goals')
-          .doc(user.uid) // Save goal under user's UID
-          .set({
-        'exercise': selectedItem,
-        'goal_minutes': _exerciseGoal,
-        'createdAt': DateTime.now().toIso8601String(),
-      });
-
-      print("value int: ${_exerciseGoal.toInt()}");
-
-      Provider.of<ExerciseTimerProvider>(context, listen: false)
-          .startTimer(_exerciseGoal.toInt(), selectedItem!);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Exercise goal saved successfully!')),
-      );
-    } catch (e) {
-      print("Error saving goal: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to save goal!')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +179,7 @@ class _ExerciseGoalState extends State<ExerciseGoal> {
           Center(
             child: CustomPrimaryButton(
                 label: 'Save Goal',
-                onPressed: _saveExerciseGoal,)
+                onPressed: () => ExerciseScheduleController.saveExerciseGoal(selectedItem, _exerciseGoal, context),)
           )
         ],
       ),
