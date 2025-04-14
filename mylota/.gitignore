@@ -1,0 +1,22 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+build/
+.idea/
+android/.gradle/
+android/app/build/
+ios/Pods/
+*.iml
+
+# APKs
+*.apk
+
+# macOS & Linux
+.DS_Store
+
+# VSCode
+.vscode/
+
+# Others
+*.log

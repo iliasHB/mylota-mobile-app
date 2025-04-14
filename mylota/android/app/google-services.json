@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "1045011437961",
+    "project_id": "mylota-fitness-project",
+    "storage_bucket": "mylota-fitness-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045011437961:android:c6aed11df6fd3b717d6958",
+        "android_client_info": {
+          "package_name": "com.example.demo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBymyqWMe1PvBdEI3D0OtbB59qsbkxPmf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045011437961:android:e301b7b9eec42ed27d6958",
+        "android_client_info": {
+          "package_name": "com.example.mylota"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBymyqWMe1PvBdEI3D0OtbB59qsbkxPmf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1045011437961:android:bdf8898d142209947d6958",
+        "android_client_info": {
+          "package_name": "com.fitness.mylota"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBymyqWMe1PvBdEI3D0OtbB59qsbkxPmf4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
