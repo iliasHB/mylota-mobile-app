@@ -261,16 +261,19 @@ class _RegisterPageState extends State<RegisterPage> {
                           const Icon(Icons.warehouse, color: Colors.green),
                     )),
                 const SizedBox(height: 16),
-                CustomPrimaryButton(
-                    label: 'Signup',
+
+                isLoading
+                    ? const CustomContainerLoadingButton()
+                    : CustomPrimaryButton(
+                  label: 'Login',
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
                         if (country == null || selectedPlan == null) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(
-                            "country or plan not selected",
-                            style: AppStyle.cardfooter,
-                          )));
+                                "country or plan not selected",
+                                style: AppStyle.cardfooter,
+                              )));
                         }
                         register();
                       }

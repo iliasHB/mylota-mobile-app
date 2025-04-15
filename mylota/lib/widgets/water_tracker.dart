@@ -22,16 +22,16 @@ class _WaterTrackerState extends State<WaterTracker> {
   @override
   void initState() {
     super.initState();
-    _loadWaterIntake();
+    // _loadWaterIntake();
   }
 
-  // Load saved water intake goal
-  Future<void> _loadWaterIntake() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _waterIntake = prefs.getDouble('waterIntake') ?? 2.0;
-    });
-  }
+  // // Load saved water intake goal
+  // Future<void> _loadWaterIntake() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   setState(() {
+  //     _waterIntake = prefs.getDouble('waterIntake') ?? 2.0;
+  //   });
+  // }
 
   Future<void> _pickTime(BuildContext context, String title,
       Function(TimeOfDay) onTimeSelected) async {
