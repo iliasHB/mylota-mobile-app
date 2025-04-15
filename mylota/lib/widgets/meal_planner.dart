@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../controller/meal_planner_controller.dart';
+import '../core/common/constant.dart';
 import '../utils/styles.dart';
 import 'custom_input_decorator.dart';
 
@@ -16,23 +18,6 @@ class _MealPlannerState extends State<MealPlanner> {
   final TextEditingController _mealController = TextEditingController();
   final TextEditingController _mealTimeController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  // Meal categories
-  Map<String, String> meals = {
-    'Morning': 'Breakfast',
-    'Afternoon': 'Lunch',
-    'Evening': 'Dinner',
-  };
-
-
-  Map<String, String> days = {
-    'day 1': 'Sunday',
-    'day 2': 'Monday',
-    'day 3': 'Tuesday',
-    'day 4': 'Wednesday',
-    'day 5': 'Thursday',
-    'day 6': 'Friday',
-    'day 7': 'Saturday',
-  };
 
   // Selected category and vegetables
   String _selectedCategory = 'Breakfast';
@@ -165,7 +150,6 @@ class _MealPlannerState extends State<MealPlanner> {
   // }
 
   TimeOfDay? _mealTime;
-  // TimeOfDay? _wakeTime;
 
   Future<void> _pickTime(BuildContext context, bool isMealTime) async {
     final pickedTime = await showTimePicker(
@@ -197,23 +181,9 @@ class _MealPlannerState extends State<MealPlanner> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
-            // Row(
-            //   children: [
-            //     Icon(Icons.restaurant_menu, color: Colors.green, size: 28),
-            //     SizedBox(width: 10),
-            //     Text(
-            //       'Meal Planner',
-            //       style: AppStyle.cardSubtitle
-            //     ),
-            //   ],
-            // ),
-            // const SizedBox(height: 20),
-
-            // Category dropdown
             DropdownButtonFormField<String>(
                 value: _selectedDayCategory,
-                items: days.entries.map<DropdownMenuItem<String>>((category) {
+                items: Constant.days.entries.map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category.value,
                     child: Text(
@@ -236,7 +206,7 @@ class _MealPlannerState extends State<MealPlanner> {
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
                 value: _selectedCategory,
-                items: meals.entries.map<DropdownMenuItem<String>>((category) {
+                items: Constant.meals.entries.map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category.value,
                     child: Text(
@@ -380,30 +350,6 @@ class _MealPlannerState extends State<MealPlanner> {
                   prefixIcon:
                   const Icon(Icons.set_meal, color: Colors.green),
                 )),
-
-            // DropdownButtonFormField<String>(
-            //   decoration: const InputDecoration(
-            //     border: OutlineInputBorder(),
-            //     labelText: 'Choose second veges color',
-            //   ),
-            //   value: selectedItem2,
-            //   items: dropdownItemsVeg2.map((exercise) {
-            //     return DropdownMenuItem<String>(
-            //       value: exercise,
-            //       child: Row(
-            //         children: [
-            //           const SizedBox(width: 10),
-            //           Text(exercise),
-            //         ],
-            //       ),
-            //     );
-            //   }).toList(),
-            //   onChanged: (value) {
-            //     setState(() {
-            //       selectedItem2 = value!;
-            //     });
-            //   },
-            // ),
             const SizedBox(height: 20),
 
             // Add meal button
@@ -411,7 +357,6 @@ class _MealPlannerState extends State<MealPlanner> {
               child: CustomPrimaryButton(
                   label: 'Add Meal',
                   onPressed: (){
-                    // uploadNationalitiesToFirestore();
                       if (_formKey.currentState?.validate() ?? false) {
                         _saveMeals();
                       }
@@ -433,6 +378,18 @@ class _MealPlannerState extends State<MealPlanner> {
           ],
         ),
       ),
+    );
+  }
+
+  void _saveMeals() {
+    MealPlannerController.saveMeals(
+      context: context,
+        mealController: _mealController.text.trim(),
+      selectedCategory: _selectedCategory,
+        selectedDayCategory: _selectedDayCategory,
+        mealTime: _mealTime,
+        selectedItem: selectedItem,
+        selectedItem2: selectedItem2
     );
   }
 
@@ -541,90 +498,6 @@ class _MealPlannerState extends State<MealPlanner> {
   //   }
   // }
 
-  Future<void> _saveMeals() async {
-    if (_mealController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meal name cannot be empty!'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
-
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        print("User not logged in!");
-        return;
-      }
-
-      DocumentReference userDoc = FirebaseFirestore.instance
-          .collection('meal-planner')
-          .doc(user.uid);
-
-      DocumentSnapshot docSnapshot = await userDoc.get();
-      Map<String, dynamic> mealData = {};
-
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        mealData = docSnapshot.data() as Map<String, dynamic>;
-      }
-
-      Map<String, dynamic> mealsByDay = mealData[_selectedDayCategory] ?? {};
-
-      // Check if meal already exists for the category (e.g., Breakfast, Lunch, etc.)
-      if (mealsByDay.containsKey(_selectedCategory)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Meal already exists for this time. Updating...'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-
-      // String timeString = '${_mealTime!.hour}:${_mealTime!.minute}';
-      String timeString = _mealTime!.format(context);
-
-      Map<String, dynamic> newMeal = {
-        'meal-time': timeString,
-        'name': _mealController.text,
-        'vegetable1': selectedItem,
-        'vegetable2': selectedItem2,
-        'createdAt': DateTime.now().toIso8601String(),
-      };
-
-      // Set/Update the meal directly as an object
-      mealsByDay[_selectedCategory] = newMeal;
-      mealData[_selectedDayCategory] = mealsByDay;
-
-      await userDoc.set(mealData, SetOptions(merge: true));
-
-      setState(() {
-        _mealController.clear();
-        selectedItem = dropdownItems.isNotEmpty ? dropdownItems.first : null;
-        selectedItem2 = dropdownItemsVeg2.isNotEmpty ? dropdownItemsVeg2.first : null;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meal saved successfully!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    } catch (e) {
-      print("Error saving meal: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Failed to save meal. Please try again.'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
-  }
 
 }
 

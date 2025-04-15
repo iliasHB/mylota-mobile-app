@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mylota/controller/meal_planner_controller.dart';
 import 'package:provider/provider.dart';
+import '../controller/water_intake_controller.dart';
 import '../core/usecase/provider/water_intake_provider.dart';
 import 'home_page.dart';
 import 'progress_page.dart';
@@ -28,7 +30,8 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     // Check and reset the acknowledged flag daily
-    checkAndResetAcknowledgedFlag();
+    WaterInTakeController.checkAndResetAcknowledgedFlag(context);
+    MealPlannerController.checkAndResetAcknowledgedFlag(context);
     // Initialize pages for the bottom navigation bar
     _pages = [
       HomePage(),
@@ -86,45 +89,4 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-
-  Future<void> checkAndResetAcknowledgedFlag() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) {
-      print("User not logged in.");
-      return;
-    }
-
-    final docSnapshot = await FirebaseFirestore.instance
-        .collection('water-intake-schedule')
-        .doc(uid)
-        .get();
-
-    if (docSnapshot.exists) {
-      final data = docSnapshot.data();
-      final bool isAcknowledged = data?['acknowledged'] ?? false;
-      final String lastAcknowledgedDate = data?['createdAt'] ?? '';
-
-      final today = DateTime.now();
-      final todayStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-
-      // Check if today is a new day and acknowledgment is already done
-      if (isAcknowledged && lastAcknowledgedDate != todayStr) {
-        // Reset acknowledged status
-        await FirebaseFirestore.instance
-            .collection('water-intake-schedule')
-            .doc(uid)
-            .update({
-          'acknowledged': false, // Reset acknowledged for new day
-          'createdAt': todayStr, // Update today's date
-        });
-
-        // Reschedule the reminder for today
-        final reminderTime = data?['reminder-time'] ?? "08:00"; // Get reminder time from Firestore
-        final intakeLiters = data?['daily-water-intake'] ?? "2"; // Get intake amount
-
-        Provider.of<WaterReminderProvider>(context, listen: false)
-            .startDailyWaterIntakeTimer(intakeLiters, reminderTime, false); // false indicates new day reminder
-      }
-    }
-  }
 }

@@ -45,4 +45,48 @@ class WaterInTakeController {
       );
     }
   }
+  
+  static  Future<void> checkAndResetAcknowledgedFlag(BuildContext context) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      print("User not logged in.");
+      return;
+    }
+
+    final docSnapshot = await FirebaseFirestore.instance
+        .collection('water-intake-schedule')
+        .doc(uid)
+        .get();
+
+    if (docSnapshot.exists) {
+      final data = docSnapshot.data();
+      final bool isAcknowledged = data?['acknowledged'] ?? false;
+      final String lastAcknowledgedDate = data?['createdAt'] ?? '';
+
+      final today = DateTime.now();
+      final todayStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+
+      // Check if today is a new day and acknowledgment is already done
+      if (isAcknowledged && lastAcknowledgedDate != todayStr) {
+        // Reset acknowledged status
+        await FirebaseFirestore.instance
+            .collection('water-intake-schedule')
+            .doc(uid)
+            .update({
+          'acknowledged': false, // Reset acknowledged for new day
+          'createdAt': todayStr, // Update today's date
+        });
+
+        // Reschedule the reminder for today
+        final reminderTime = data?['reminder-time'] ?? "08:00"; // Get reminder time from Firestore
+        final intakeLiters = data?['daily-water-intake'] ?? "2"; // Get intake amount
+
+        Provider.of<WaterReminderProvider>(context, listen: false)
+            .startDailyWaterIntakeTimer(intakeLiters, reminderTime, false); // false indicates new day reminder
+      }
+    }
+  }
 }
+
+
+
