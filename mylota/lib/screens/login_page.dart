@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:mylota/screens/main_screen.dart';
 import 'package:mylota/screens/register_page.dart';
 import 'package:provider/provider.dart';
+import '../controller/login_controller.dart';
 import '../core/usecase/provider/water_intake_provider.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
@@ -23,7 +24,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final _formKey = GlobalKey<FormState>();
 
-  // PrefUtils prefUtils = PrefUtils();
+  void _startLoading() => setState(() => isLoading = true);
+  void _stopLoading() => setState(() => isLoading = false);
 
   bool isPasswordVisible = true;
 
@@ -34,28 +36,16 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
   }
 
+  void _login() {
+    LoginController.loginUser(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      context: context,
+      onStartLoading: _startLoading,
+      onStopLoading: _stopLoading,
+    );
+  }
 
-  // void _loadRememberMe() async {
-  //   String? rememberedEmail = await prefUtils.getDashStr("rememberMe");
-  //   if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
-  //     setState(() {
-  //       _emailController.text = rememberedEmail;
-  //       isRememberMe = true;
-  //     });
-  //   }
-  // }
-  //
-  // void _toggleRememberMe(bool? value) {
-  //   setState(() {
-  //     isRememberMe = value ?? false;
-  //   });
-  //
-  //   if (isRememberMe) {
-  //     prefUtils.setDashStr("rememberMe", _emailController.text.trim());
-  //   } else {
-  //     prefUtils.setDashStr("rememberMe", ""); // Clear saved email
-  //   }
-  // }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -163,12 +153,9 @@ class _LoginPageState extends State<LoginPage> {
                     label: 'Login',
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
-                        loginUser(_emailController.text.trim(),
-                            _passwordController.text.trim());
-                        // final loginReqEntity = LoginReqEntity(
-                        //     email: _emailController.text.trim(),
-                        //     password: _passwordController.text.trim());
-                        // context.read<LoginBloc>().add(LoginEvent(loginReqEntity));
+                        _login();
+                        // LoginController.loginUser(_emailController.text.trim(),
+                        //     _passwordController.text.trim());
                       }
                     },
                   ),
@@ -192,60 +179,4 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
-
-  Future<void> loginUser(String email, String password) async {
-    print(email);
-    print(password);
-    try {
-      setState(() {
-        isLoading = true;
-      });
-      // Query Firestore to check if the user exists
-      QuerySnapshot userQuery = await FirebaseFirestore.instance
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .get();
-
-      if (userQuery.docs.isNotEmpty) {
-        // User exists, proceed with authentication
-        UserCredential userCredential =
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
-        setState(() {
-          isLoading = false;
-        });
-        print("User logged in successfully: ${userCredential.user!.email}");
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MainScreen(),
-          ),
-        );
-      } else {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-          'User does not exist',
-          style: AppStyle.cardSubtitle,
-        )));
-
-        print("User does not exist");
-      }
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-        "Error logging in: connection unreachable",
-        style: AppStyle.cardSubtitle,
-      )));
-      print("Error logging in: $e");
-    }
-  }
-
 }

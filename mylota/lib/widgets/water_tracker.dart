@@ -17,7 +17,7 @@ class WaterTracker extends StatefulWidget {
 }
 
 class _WaterTrackerState extends State<WaterTracker> {
-  double _waterIntake = 2.0; // Default water intake goal in litres
+  double _waterIntake = 1.0; // Default water intake goal in litres
   TimeOfDay? reminderPeriod;
   @override
   void initState() {
