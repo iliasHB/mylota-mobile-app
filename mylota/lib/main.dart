@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'core/services/notification_service.dart';
 import 'core/usecase/provider/exercise_timer_provider.dart';
+import 'core/usecase/provider/meal_planner_provider.dart';
 import 'core/usecase/provider/sleep_timer_provider.dart';
 import 'core/usecase/provider/water_intake_provider.dart';
 
@@ -14,11 +15,15 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // await NotificationService.initializeNotification();
   final waterReminderProvider = WaterReminderProvider();
+  final mealReminderProvider = MealPlannerProvider();
 
   // Initialize NotificationService with the callback
   NotificationService.initializeNotification((String? payload) {
     if (payload == 'waterReminderTap') {
       waterReminderProvider.markAsDoneForToday();
+    }
+    if (payload == 'mealReminderTap') {
+      mealReminderProvider.markMealAsDoneForToday();
     }
   });
   // await initializeService();
@@ -29,6 +34,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (_) => ExerciseTimerProvider()),
       ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
       ChangeNotifierProvider(create: (_) => WaterReminderProvider()),
+      ChangeNotifierProvider(create: (_) => MealPlannerProvider()),
     ],
     child: const MyApp(),
   ));

@@ -127,4 +127,53 @@ class NotificationService {
   static Future<void> cancelReminder() async {
     await _notificationsPlugin.cancel(12345);
   }
+
+  static void scheduleRepeatingMealReminder(
+      String meal,
+      // String selectedCategory,
+      // String selectedDayCategory,
+      String? selectedItem,
+      String? selectedItem2,
+      int reminderHour,
+      int reminderMinute) async {
+    AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
+      'meal_channel',
+      'Meal Schedule',
+      channelDescription: 'Reminder to take your daily meal',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+      enableVibration: true,
+      fullScreenIntent: true, // Opens the app like an alarm
+      ongoing: true, // Keeps the notification active until dismissed
+      autoCancel: true, // Prevents auto-dismiss when tapped
+      visibility: NotificationVisibility.public,
+    );
+
+    NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+    );
+
+    final now = DateTime.now();
+    final reminderDateTime =
+    DateTime(now.year, now.month, now.day, reminderHour, reminderMinute);
+
+    final initialDelay = reminderDateTime.isBefore(now)
+        ? reminderDateTime.add(const Duration(days: 1)).difference(now)
+        : reminderDateTime.difference(now);
+
+    // Schedule the notification to repeat every 24 hours at the same time
+    await _notificationsPlugin.zonedSchedule(
+      12345,
+      '🍱 Meal Reminder',
+      'Remember to have your $meal today',
+      tz.TZDateTime.from(now.add(initialDelay), tz.local),
+      platformDetails,
+      payload: 'mealReminderTap',
+      matchDateTimeComponents: DateTimeComponents.time,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
 }
