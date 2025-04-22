@@ -58,7 +58,7 @@ class SleepTimerProvider with ChangeNotifier {
         notifyListeners();
         // Show a notification
         NotificationService.showNotification(
-          id: 0,
+          id: 8,
           title: 'Good Morning!',
           body: 'Time to wake up! 🌅. ',
           channelId: 'sleep_channel_id',

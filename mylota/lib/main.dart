@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mylota/core/usecase/provider/todo_schedule_provider.dart';
 import 'package:mylota/screens/splash_screen.dart';
 import 'package:mylota/utils/permission_util.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ Future<void> main() async {
   // await NotificationService.initializeNotification();
   final waterReminderProvider = WaterReminderProvider();
   final mealReminderProvider = MealPlannerProvider();
+  final todoReminderProvider = ToDoScheduleProvider();
 
   // Initialize NotificationService with the callback
   NotificationService.initializeNotification((String? payload) {
@@ -24,6 +26,10 @@ Future<void> main() async {
     }
     if (payload == 'mealReminderTap') {
       mealReminderProvider.markMealAsDoneForToday();
+    }
+
+    if (payload == 'toDoReminderTap') {
+      todoReminderProvider.markToDoAsDoneForToday();
     }
   });
   // await initializeService();
@@ -35,6 +41,7 @@ Future<void> main() async {
       ChangeNotifierProvider(create: (_) => SleepTimerProvider()),
       ChangeNotifierProvider(create: (_) => WaterReminderProvider()),
       ChangeNotifierProvider(create: (_) => MealPlannerProvider()),
+      ChangeNotifierProvider(create: (_) => ToDoScheduleProvider()),
     ],
     child: const MyApp(),
   ));

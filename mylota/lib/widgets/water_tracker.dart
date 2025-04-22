@@ -19,6 +19,10 @@ class WaterTracker extends StatefulWidget {
 class _WaterTrackerState extends State<WaterTracker> {
   double _waterIntake = 1.0; // Default water intake goal in litres
   TimeOfDay? reminderPeriod;
+
+  bool isLoading = false;
+  void _startLoading() => setState(() => isLoading = true);
+  void _stopLoading() => setState(() => isLoading = false);
   @override
   void initState() {
     super.initState();
@@ -128,11 +132,21 @@ class _WaterTrackerState extends State<WaterTracker> {
           Center(
               child: CustomPrimaryButton(
             label: 'Save Goal',
-            onPressed: () => WaterInTakeController.saveWaterIntake(
-                reminderPeriod, context, _waterIntake),
+            onPressed: () => saveWaterIntake(reminderPeriod, context, _waterIntake)
+                // WaterInTakeController.saveWaterIntake(
+                // reminderPeriod, context, _waterIntake),
           )),
         ],
       ),
     );
+  }
+
+  saveWaterIntake(TimeOfDay? reminderPeriod, BuildContext context, double waterIntake) {
+    WaterInTakeController.saveWaterIntake(
+        reminderPeriod,
+      context,
+      _waterIntake,
+      onStartLoading: _startLoading,
+      onStopLoading: _stopLoading);
   }
 }
