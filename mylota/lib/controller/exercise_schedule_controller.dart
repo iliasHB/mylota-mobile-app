@@ -6,8 +6,12 @@ import 'package:provider/provider.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 
 class ExerciseScheduleController {
-  static Future<void> saveExerciseGoal(String? selectedItem, double _exerciseGoal, BuildContext context) async {
+  static Future<void> saveExerciseGoal(
+      String? selectedItem, double _exerciseGoal, BuildContext context,
+      {required VoidCallback onStartLoading,
+      required VoidCallback onStopLoading}) async {
     try {
+      onStartLoading();
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         print("User not logged in!");
@@ -23,8 +27,7 @@ class ExerciseScheduleController {
         'createdAt': DateTime.now().toIso8601String(),
       });
 
-      print("value int: ${_exerciseGoal.toInt()}");
-
+      onStopLoading();
       Provider.of<ExerciseTimerProvider>(context, listen: false)
           .startTimer(_exerciseGoal.toInt(), selectedItem!);
       ScaffoldMessenger.of(context).showSnackBar(

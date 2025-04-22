@@ -21,9 +21,13 @@ class _ToDoListState extends State<ToDoList> {
   final TextEditingController _taskDescController = TextEditingController();
   List<Map<String, dynamic>> tasks = [];
   bool isDisable = false;
-  TimeOfDay? reminderPeriod;
+  bool isLoading = false;
+  void _startLoading() => setState(() => isLoading = true);
+  void _stopLoading() => setState(() => isLoading = false);
+  // TimeOfDay? reminderPeriod;
 
-  Future<void> _pickTime(BuildContext context, String title, Function(TimeOfDay) onTimeSelected) async {
+  Future<void> _pickTime(BuildContext context, String title,
+      Function(TimeOfDay) onTimeSelected) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -33,7 +37,6 @@ class _ToDoListState extends State<ToDoList> {
       onTimeSelected(pickedTime);
     }
   }
-
 
   void _removeTask(int index) {
     setState(() {
@@ -45,13 +48,13 @@ class _ToDoListState extends State<ToDoList> {
   // DateTime? toDate;
   // String dropdownValue1 = speedType.first;
 
-  void _setDateRange(int daysAgo) {
-    final now = DateTime.now();
-    setState(() {
-      fromDate = DateTime(now.year, now.month, now.day - daysAgo, 0, 0, 0);
-      // toDate = DateTime(now.year, now.month, now.day - daysAgo, 23, 59, 59);
-    });
-  }
+  // void _setDateRange(int daysAgo) {
+  //   final now = DateTime.now();
+  //   setState(() {
+  //     fromDate = DateTime(now.year, now.month, now.day - daysAgo, 0, 0, 0);
+  //     // toDate = DateTime(now.year, now.month, now.day - daysAgo, 23, 59, 59);
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +63,6 @@ class _ToDoListState extends State<ToDoList> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           TextFormField(
             readOnly: true,
             decoration: InputDecoration(
@@ -70,9 +72,10 @@ class _ToDoListState extends State<ToDoList> {
                 color: Colors.green,
               ),
               filled: true,
-              fillColor: Color(0xFF2A7F67).withOpacity(0.3),
-              //labelStyle: AppStyle.cardfooter.copyWith(fontSize: 12),
-              hintStyle:  AppStyle.cardfooter.copyWith(fontSize: 12,),
+              fillColor: const Color(0xFF2A7F67).withOpacity(0.3),
+              hintStyle: AppStyle.cardfooter.copyWith(
+                fontSize: 12,
+              ),
               hintText: fromDate == null
                   ? 'Select Start Date and Time'
                   : fromDate.toString(),
@@ -94,7 +97,6 @@ class _ToDoListState extends State<ToDoList> {
               );
             },
           ),
-
           const SizedBox(height: 10),
           TextFormField(
             controller: _taskTitleController,
@@ -111,13 +113,6 @@ class _ToDoListState extends State<ToDoList> {
               return null;
             },
           ),
-          // TextField(
-          //   controller: _taskTitleController,
-          //   decoration: const InputDecoration(
-          //     labelText: 'Task Title',
-          //     border: OutlineInputBorder(),
-          //   ),
-          // ),
           const SizedBox(height: 10),
           TextFormField(
             controller: _taskDescController,
@@ -134,63 +129,7 @@ class _ToDoListState extends State<ToDoList> {
               return null;
             },
           ),
-          // TextField(
-          //   controller: _taskDescController,
-          //   decoration: const InputDecoration(
-          //     labelText: 'Task Description',
-          //     border: OutlineInputBorder(),
-          //   ),
-          // ),
-          // const SizedBox(height: 10),
-          // ElevatedButton.icon(
-          //   onPressed: _addTask,
-          //   icon: const Icon(Icons.add, color: Colors.white),
-          //   label: const Text('Add Task'),
-          //   style: ElevatedButton.styleFrom(
-          //     backgroundColor: Colors.green,
-          //   ),
-          // ),
           const SizedBox(height: 10),
-          TextFormField(
-            keyboardType: TextInputType.datetime,
-            readOnly: true,
-            decoration: InputDecoration(
-              // enabled: isDisable,
-              prefixIcon: const Icon(
-                Icons.alarm,
-                color: Colors.green,
-              ),
-              filled: true,
-              fillColor: const Color(0xFF2A7F67).withOpacity(0.3),
-              hintStyle:  AppStyle.cardfooter.copyWith(fontSize: 12,),
-              hintText: reminderPeriod?.format(context) == null
-                  ? 'Set reminder period'
-                  : reminderPeriod!.format(context),
-              border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(5)),
-            ),
-            onTap: () => _pickTime(context, "Reminder period", (time) {
-              setState(() {
-                reminderPeriod = time;
-              });
-            }),
-            // {
-            //   DatePicker.showDateTimePicker(
-            //     context,
-            //     showTitleActions: true,
-            //     onConfirm: (date) {
-            //       setState(() {
-            //         fromDate = date;
-            //         // isDisable = true;
-            //       });
-            //     },
-            //     currentTime: DateTime.now(),
-            //   );
-            // },
-          ),
-          const SizedBox(height: 20),
-          // Display Task List
           tasks.isEmpty
               ? const Center(child: Text('No tasks added yet.'))
               : Expanded(
@@ -210,60 +149,38 @@ class _ToDoListState extends State<ToDoList> {
                     },
                   ),
                 ),
-          // // Task input field
-          // TextField(
-          //   controller: _taskController,
-          //   decoration: InputDecoration(
-          //     labelText: 'Enter task',
-          //     border: const OutlineInputBorder(),
-          //     suffixIcon: IconButton(
-          //       icon: const Icon(Icons.add, color: Colors.green),
-          //       onPressed: (){}//_addTask,
-          //     ),
-          //   ),
-          // ),
           const SizedBox(height: 20),
-
           Center(
-              child: CustomPrimaryButton(
-            label: 'Save',
-            onPressed: () async {
-              print('dateTime: $fromDate');
-              List<Map<String, dynamic>> tasks = [
-                {
-                  'period': fromDate,
-                  'title': _taskTitleController.text.trim(),
-                  'description': _taskDescController.text.trim(),
-                },
-              ];
-
-              await TodoController.saveTasks(tasks, reminderPeriod, context);
-            },
-          )
-
-              // ElevatedButton(
-              //   onPressed: () async {
-              //     print('dateTime: $fromDate');
-              //     List<Map<String, dynamic>> tasks = [
-              //       {
-              //         'period': fromDate,
-              //         'title': _taskTitleController.text.trim(),
-              //         'description': _taskDescController.text.trim(),
-              //       },
-              //     ];
-              //
-              //     await _saveTasks(tasks);
-              //   },
-              //   child: const Text('Save To-Do List'),
-              //   style: ElevatedButton.styleFrom(
-              //     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-              //     shadowColor: Colors.grey
-              //   ),
-              // ),
-              ),
+              child: isLoading
+                  ? const CustomContainerLoadingButton()
+                  : CustomPrimaryButton(
+                      label: 'Save',
+                      onPressed: () async {
+                        List<Map<String, dynamic>> tasks = [
+                          {
+                            'reminder-date': fromDate,
+                            'title': _taskTitleController.text.trim(),
+                            'description': _taskDescController.text.trim(),
+                            'acknowledgment': false,
+                            'createdAt': Timestamp.now().toDate().toIso8601String(),
+                          },
+                        ];
+                        saveTodo(tasks, context);
+                        // await TodoController.saveTasks(tasks, context);
+                      },
+                    )
+          ),
         ],
       ),
     );
+  }
+
+  void saveTodo(List<Map<String, dynamic>> tasks, BuildContext context) async {
+    await TodoController.saveTasks(
+      tasks,
+      context,
+      onStartLoading: _startLoading,
+      onStopLoading: _stopLoading,);
   }
 }
 

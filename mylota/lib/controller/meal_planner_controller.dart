@@ -13,6 +13,8 @@ class MealPlannerController {
     TimeOfDay? mealTime,
     String? selectedItem,
     String? selectedItem2,
+    required VoidCallback onStartLoading,
+    required VoidCallback onStopLoading,
   }) async {
     if (mealController.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -26,6 +28,7 @@ class MealPlannerController {
     }
 
     try {
+      onStartLoading();
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         print("User not logged in!");
@@ -88,8 +91,8 @@ class MealPlannerController {
 
       Provider.of<MealPlannerProvider>(context, listen: false).startMealPlanner(
           mealController,
-          // selectedCategory,
-          // selectedDayCategory,
+          selectedCategory,
+          selectedDayCategory,
           mealTime.format(context),
           selectedItem,
           selectedItem2,
@@ -102,8 +105,9 @@ class MealPlannerController {
           duration: Duration(seconds: 2),
         ),
       );
+      onStopLoading();
     } catch (e) {
-      print("Error saving meal: $e");
+      onStopLoading();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Failed to save meal. Please try again.'),
@@ -148,10 +152,11 @@ class MealPlannerController {
         });
 
         // Reschedule the reminder for today
-        final reminderTime = data?['meal-time'] ?? "08:00"; // Get reminder time from Firestore
+        final reminderTime =
+            data?['meal-time'] ?? "08:00"; // Get reminder time from Firestore
         final meal = data?['name'] ?? "";
-        // final selectedCategory = data?[''] ?? "";
-        // final selectedDayCategory = data?[''] ?? "";
+        final selectedCategory = data?[''] ?? "";
+        final selectedDayCategory = data?[''] ?? "";
         final selectedItem = data?['vegetable1'] ?? "";
         final selectedItem2 = data?['vegetable2'] ?? "";
 
@@ -160,8 +165,8 @@ class MealPlannerController {
                 meal,
                 selectedCategory,
                 selectedDayCategory,
-                // reminderTime,
-                // selectedItem,
+                reminderTime,
+                selectedItem,
                 selectedItem2,
                 false); // false indicates new day reminder
       }

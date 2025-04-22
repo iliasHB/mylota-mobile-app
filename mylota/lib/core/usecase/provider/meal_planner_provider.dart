@@ -7,14 +7,14 @@ import '../../services/notification_service.dart';
 class MealPlannerProvider with ChangeNotifier {
   Future<void> startMealPlanner(
       String meal,
-      // String selectedCategory,
-      // String selectedDayCategory,
+      String selectedCategory,
+      String selectedDayCategory,
       String reminderTime,
       String? selectedItem,
       String? selectedItem2,
       bool acknowledged) async {
     if (acknowledged) {
-      await NotificationService.cancelReminder(); // Cancel existing notifications if acknowledged
+      await NotificationService.cancelMealReminder(); // Cancel existing notifications if acknowledged
       return;
     }
 
@@ -25,8 +25,8 @@ class MealPlannerProvider with ChangeNotifier {
     // Schedule the notification
     NotificationService.scheduleRepeatingMealReminder(
         meal,
-        // selectedCategory,
-        // selectedDayCategory,
+        selectedCategory,
+        selectedDayCategory,
         selectedItem,
         selectedItem2,
         reminderHour,
@@ -35,7 +35,7 @@ class MealPlannerProvider with ChangeNotifier {
 
   // Mark the reminder as done for today
   Future<void> markMealAsDoneForToday() async {
-    await NotificationService.cancelReminder(); // Cancel notifications
+    await NotificationService.cancelMealReminder(); // Cancel notifications
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;

@@ -1,10 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mylota/controller/meal_planner_controller.dart';
-import 'package:provider/provider.dart';
 import '../controller/water_intake_controller.dart';
-import '../core/usecase/provider/water_intake_provider.dart';
 import 'home_page.dart';
 import 'progress_page.dart';
 import 'mental_stimulation_page.dart';

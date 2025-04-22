@@ -9,7 +9,8 @@ class RegisterController {
   static Future<void> registerUser(String email, String password,
       String firstname, lastname, subscription, country, address,
       {required VoidCallback onStartLoading,
-      required VoidCallback onStopLoading, required BuildContext context}) async {
+      required VoidCallback onStopLoading,
+      required BuildContext context}) async {
     try {
       onStartLoading();
       // Check if user already exists in Firebase Authentication
@@ -54,6 +55,7 @@ class RegisterController {
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
+      onStopLoading();
       SnackBar(
         content: Text("Error registering user: $e", style: AppStyle.cardfooter),
       );
