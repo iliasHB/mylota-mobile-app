@@ -54,7 +54,7 @@ class HomePage extends StatelessWidget {
                     '🏋️‍♂️',
                     style: TextStyle(fontSize: 20)),
                   // Icons.fitness_center,
-                  child: ExerciseGoal(),
+                  child: const ExerciseGoal(),
                 ),
                 const SizedBox(height: 20),
 
@@ -80,7 +80,7 @@ class HomePage extends StatelessWidget {
                     style: TextStyle(fontSize: 20),
                   ),
                   // Icons.local_drink,
-                  child: WaterTracker(),
+                  child: const WaterTracker(),
                 ),
                 const SizedBox(height: 20),
 
@@ -92,7 +92,7 @@ class HomePage extends StatelessWidget {
                     '🍱',
                     style: TextStyle(fontSize: 20),
                   ),
-                  child: MealPlanner(),
+                  child: const MealPlanner(),
                 ),
                 const SizedBox(height: 20),
 
@@ -147,17 +147,11 @@ class HomePage extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: AppStyle.cardSubtitle
                       ),
                       Text(
                         subtitle,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: AppStyle.cardfooter.copyWith(fontSize: 12)
                       ),
                     ],
                   ),

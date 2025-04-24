@@ -10,6 +10,8 @@ import '../utils/styles.dart';
 import 'custom_input_decorator.dart';
 
 class MealPlanner extends StatefulWidget {
+  const MealPlanner({super.key});
+
   @override
   _MealPlannerState createState() => _MealPlannerState();
 }

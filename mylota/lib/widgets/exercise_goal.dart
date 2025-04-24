@@ -12,6 +12,8 @@ import '../utils/styles.dart';
 import 'custom_input_decorator.dart';
 
 class ExerciseGoal extends StatefulWidget {
+  const ExerciseGoal({super.key});
+
   @override
   _ExerciseGoalState createState() => _ExerciseGoalState();
 }
