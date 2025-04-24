@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mylota/utils/styles.dart';
+import '../widgets/custom_input_decorator.dart';
 import '../widgets/mental_stimulation_widget.dart';
 
 class MentalStimulationPage extends StatefulWidget {
@@ -26,6 +28,8 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   TimeOfDay? checkLoverTime;
   TimeOfDay? selfTreatTime;
 
+  List<String> dropdownItems = [];
+
   Future<void> _pickTime(BuildContext context, String title, Function(TimeOfDay) onTimeSelected) async {
     final TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -41,9 +45,9 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Mental Stimulation',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color:  Colors.white),
+          style: AppStyle.cardTitle
         ),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -69,35 +73,61 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Boost your brainpower with fun and engaging challenges designed to enhance focus, memory, and problem-solving skills',
-                style: TextStyle(fontSize: 16, color: Colors.black),
+                style: AppStyle.cardfooter,
+                softWrap: true,
+                textAlign: TextAlign.justify,
               ),
               const SizedBox(height: 20),
 
               _buildSection(
                 title: 'learning journey',
                 subtitle: 'Engage in new learning.',
-                icon: Icons.lightbulb,
-                child: MentalStimulationWidget(),
+                icon: const Icon(Icons.lightbulb),
+                child: const MentalStimulationWidget(),
               ),
-
+              const SizedBox(height: 10),
               _buildSection(
                 title: 'Challenge Your Thinking',
                 subtitle: 'Select an activity to challenge your brain:',
-                child: DropdownButton<String>(
-                  value: selectedChallenge,
-                  hint: const Text('Select a challenge'),
-                  items: const [
-                    DropdownMenuItem(value: 'Puzzles & Games', child: Text('Puzzles & Games (e.g., Sudoku, chess)')),
-                    DropdownMenuItem(value: 'Cognitive Tasks', child: Text('Cognitive Tasks (e.g., math problems, quick decision-making tests)')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedChallenge = value;
-                    });
-                  },
-                ),
+                child:
+                DropdownButtonFormField<String>(
+                    value: selectedChallenge,
+                    items: dropdownItems.map<DropdownMenuItem<String>>((challenge) {
+                      return DropdownMenuItem<String>(
+                        value: challenge,
+                        child: Text(
+                          challenge,
+                          style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedChallenge = value;
+                      });
+                    },
+                    decoration: customInputDecoration(
+                      labelText: 'Choose a challenge',
+                      hintText: 'Choose a challenge',
+                      prefixIcon:
+                      const Icon(Icons.run_circle_outlined, color: Colors.green),
+                    )),
+                // const SizedBox(height: 20),
+                // DropdownButton<String>(
+                //   value: selectedChallenge,
+                //   hint: const Text('Select a challenge'),
+                //   items: const [
+                //     DropdownMenuItem(value: 'Puzzles & Games', child: Text('Puzzles & Games (e.g., Sudoku, chess)')),
+                //     DropdownMenuItem(value: 'Cognitive Tasks', child: Text('Cognitive Tasks (e.g., math problems, quick decision-making tests)')),
+                //   ],
+                //   onChanged: (value) {
+                //     setState(() {
+                //       selectedChallenge = value;
+                //     });
+                //   },
+                // ),
               ),
               const SizedBox(height: 20),
 
@@ -106,19 +136,41 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 subtitle: 'Select an activity to improve focus:',
                 child: Column(
                   children: [
-                    DropdownButton<String>(
-                      value: selectedFocusActivity,
-                      hint: const Text('Select an activity'),
-                      items: const [
-                        DropdownMenuItem(value: 'Meditation & Mindfulness', child: Text('Meditation & Mindfulness (e.g., breathing exercises, guided focus)')),
-                        DropdownMenuItem(value: 'Learning Modules', child: Text('Learning Modules (e.g., new words, languages, or skills)')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          selectedFocusActivity = value;
-                        });
-                      },
-                    ),
+                    DropdownButtonFormField<String>(
+                        value: selectedFocusActivity,
+                        items: dropdownItems.map<DropdownMenuItem<String>>((focus) {
+                          return DropdownMenuItem<String>(
+                            value: focus,
+                            child: Text(
+                              focus,
+                              style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedFocusActivity = value;
+                          });
+                        },
+                        decoration: customInputDecoration(
+                          labelText: 'Choose activity',
+                          hintText: 'Choose activity',
+                          prefixIcon:
+                          const Icon(Icons.run_circle_outlined, color: Colors.green),
+                        )),
+                    // DropdownButton<String>(
+                    //   value: selectedFocusActivity,
+                    //   hint: const Text('Select an activity'),
+                    //   items: const [
+                    //     DropdownMenuItem(value: 'Meditation & Mindfulness', child: Text('Meditation & Mindfulness (e.g., breathing exercises, guided focus)')),
+                    //     DropdownMenuItem(value: 'Learning Modules', child: Text('Learning Modules (e.g., new words, languages, or skills)')),
+                    //   ],
+                    //   onChanged: (value) {
+                    //     setState(() {
+                    //       selectedFocusActivity = value;
+                    //     });
+                    //   },
+                    // ),
                     if (selectedFocusActivity == 'Learning Modules')
                       Column(
                         children: [
@@ -174,7 +226,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               _buildSection(
                 title: 'Well-being Reminders',
                 subtitle: 'Take care of yourself with these friendly reminders:',
-                icon: Icons.favorite,
+                icon: const Icon(Icons.favorite),
                 child: Column(
                   children: [
                     _buildReminderTile(
@@ -215,16 +267,18 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     );
   }
 
+  // Widget for building a section card
   Widget _buildSection({
     required String title,
     required String subtitle,
+    Widget? icon,
     required Widget child,
-    IconData? icon,
   }) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      color: Colors.white.withOpacity(0.9),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -232,20 +286,32 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
           children: [
             Row(
               children: [
-                if (icon != null) Icon(icon, color: Color(0xFF66C3A7)), // Updated icon color
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                CircleAvatar(
+                    radius: 20,
+                    backgroundColor: const Color(0xFF66C3A7).withOpacity(0.2), // Updated background color
+                    child: icon
+                  // Icon(icon, color: Color(0xFF66C3A7), size: 24), // Updated icon color
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppStyle.cardSubtitle
+                      ),
+                      Text(
+                        subtitle,
+                        style: AppStyle.cardfooter.copyWith(fontSize: 12)
+
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              subtitle,
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             child,
           ],
         ),
@@ -264,3 +330,48 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     );
   }
 }
+
+
+// Widget _buildSection({
+//   required String title,
+//   required String subtitle,
+//   required Widget child,
+//   IconData? icon,
+// }) {
+//   return Card(
+//     elevation: 4,
+//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+//     color: Colors.white.withOpacity(0.9),
+//     child: Padding(
+//       padding: const EdgeInsets.all(16.0),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         mainAxisAlignment: MainAxisAlignment.start,
+//         children: [
+//           Row(
+//             children: [
+//               if (icon != null) Icon(icon, color: Color(0xFF66C3A7)), // Updated icon color
+//               const SizedBox(width: 8),
+//               Column(
+//                 children: [
+//                   Text(
+//                     title,
+//                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//                   ),
+//                   const SizedBox(height: 10),
+//                   Text(
+//                     subtitle,
+//                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//
+//           const SizedBox(height: 10),
+//           child,
+//         ],
+//       ),
+//     ),
+//   );
+// }

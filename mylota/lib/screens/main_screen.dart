@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mylota/controller/meal_planner_controller.dart';
+import '../controller/todo_controller.dart';
 import '../controller/water_intake_controller.dart';
 import 'home_page.dart';
 import 'progress_page.dart';
@@ -28,6 +29,7 @@ class _MainScreenState extends State<MainScreen> {
     // Check and reset the acknowledged flag daily
     WaterInTakeController.checkAndResetAcknowledgedFlag(context);
     MealPlannerController.checkAndResetAcknowledgedFlag(context);
+    // TodoController.checkAndResetAcknowledgedFlag(context);
     // Initialize pages for the bottom navigation bar
     _pages = [
       HomePage(),

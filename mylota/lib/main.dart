@@ -21,17 +21,27 @@ Future<void> main() async {
 
   // Initialize NotificationService with the callback
   NotificationService.initializeNotification((String? payload) {
+    if (payload == null) return;
+
+    if (payload.startsWith('mealReminderTap')) {
+      final parts = payload.split('|');
+      final mealType = parts.length > 1 ? parts[1] : 'breakfast'; // default fallback
+
+      mealReminderProvider.markMealAsDoneForToday(mealType);
+    }
+
     if (payload == 'waterReminderTap') {
       waterReminderProvider.markAsDoneForToday();
     }
-    if (payload == 'mealReminderTap') {
-      mealReminderProvider.markMealAsDoneForToday();
-    }
 
     if (payload == 'toDoReminderTap') {
-      todoReminderProvider.markToDoAsDoneForToday();
+      final parts = payload.split('|');
+      final todoType = parts.length > 1 ? parts[1] : ''; // default fallback
+
+      todoReminderProvider.markToDoAsDoneForToday(todoType);
     }
   });
+
   // await initializeService();
   await requestPermissions();
   await Firebase.initializeApp();

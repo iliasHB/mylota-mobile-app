@@ -5,9 +5,11 @@ import 'package:flutter/cupertino.dart';
 import '../../services/notification_service.dart';
 
 class ToDoScheduleProvider extends ChangeNotifier {
-  Future<void> startTodoSchedule(task, String reminderTime, bool acknowledged, String reminderDate) async {
+  Future<void> startTodoSchedule(
+      task, String reminderTime, bool acknowledged, String reminderDate) async {
     if (acknowledged) {
-      await NotificationService.cancelToDoReminder(); // Cancel existing notifications if acknowledged
+      await NotificationService
+          .cancelToDoReminder(); // Cancel existing notifications if acknowledged
       return;
     }
 
@@ -16,12 +18,8 @@ class ToDoScheduleProvider extends ChangeNotifier {
     final reminderMinute = int.parse(timeParts[1]);
 
     // Schedule the notification
-    NotificationService.scheduleRepeatingToDoReminder(
-        task,
-        reminderHour,
-        reminderMinute,
-        reminderDate
-    );
+    NotificationService.scheduleOneTimeToDoReminder(
+        task, reminderHour, reminderMinute, reminderDate);
 
     // NotificationService.showNotification(
     //   id: 8,
@@ -33,7 +31,7 @@ class ToDoScheduleProvider extends ChangeNotifier {
     // );
   }
 
-  Future<void> markToDoAsDoneForToday() async {
+  Future<void> markToDoAsDoneForToday(String todoType) async {
     await NotificationService.cancelToDoReminder(); // Cancel notifications
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -45,7 +43,6 @@ class ToDoScheduleProvider extends ChangeNotifier {
 
     await FirebaseFirestore.instance
         .collection('todo-goals')
-        // .where('title', isEqualTo: '')
         .doc(uid)
         .update({
       'acknowledged': true,
