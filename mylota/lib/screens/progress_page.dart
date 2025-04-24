@@ -8,6 +8,8 @@ import 'package:mylota/utils/styles.dart';
 import 'package:provider/provider.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
+import '../widgets/more_meal_schedule.dart';
+import '../widgets/more_todos.dart';
 
 class ProgressPage extends StatefulWidget {
   final double exerciseGoal;
@@ -167,9 +169,9 @@ class _ProgressPageState extends State<ProgressPage> {
                                   style: AppStyle.cardfooter,
                                 ),
                                 Text(
-                                  '$minutes:${seconds.toString().padLeft(2, '0')}',
-                                  style: AppStyle.cardTitle.copyWith(fontSize: 50)
-                                ),
+                                    '$minutes:${seconds.toString().padLeft(2, '0')}',
+                                    style: AppStyle.cardTitle
+                                        .copyWith(fontSize: 50)),
                               ],
                             );
                           },
@@ -286,7 +288,8 @@ class _ProgressPageState extends State<ProgressPage> {
                                           _DetailItem(
                                               title: task['title'].toString(),
                                               desc: task['description'],
-                                              period: task['period'] ?? "No period"),
+                                              period: task['period'] ??
+                                                  "No period"),
                                           const Divider(),
                                         ],
                                       );
@@ -296,7 +299,9 @@ class _ProgressPageState extends State<ProgressPage> {
                               },
                             ),
                             InkWell(
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.push(context, MaterialPageRoute(builder: (_)=>const MoreTodos()));
+                              },
                               child: Align(
                                   alignment: Alignment.topRight,
                                   child: Padding(
@@ -337,8 +342,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                   child: Text(
                                     '💧',
                                     style: TextStyle(fontSize: 20),
-                                  )
-                              ),
+                                  )),
                               title: 'Water Intake',
                               subTitle: "Daily water intake schedule",
                             )),
@@ -360,7 +364,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                     !snapshot.data!.exists) {
                                   return Center(
                                       child: Text(
-                                        "No water intake schedule available",
+                                    "No water intake schedule available",
                                     style: AppStyle.cardSubtitle,
                                   ));
                                 }
@@ -405,8 +409,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                   child: Text(
                                     '🍱',
                                     style: TextStyle(fontSize: 20),
-                                  )
-                              ),
+                                  )),
                               title: 'Meal Planner',
                               subTitle: "Recent meal schedule",
                             )),
@@ -494,7 +497,11 @@ class _ProgressPageState extends State<ProgressPage> {
                               },
                             ),
                             InkWell(
-                              onTap: () {},
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) =>
+                                          const MoreMealSchedule())),
                               child: Align(
                                   alignment: Alignment.topRight,
                                   child: Padding(
@@ -607,22 +614,24 @@ class _ProgressPageState extends State<ProgressPage> {
                         ),
                         Consumer<SleepTimerProvider>(
                           builder: (context, timerProvider, _) {
-                            if (timerProvider.isCounting && timerProvider.remaining != null) {
+                            if (timerProvider.isCounting &&
+                                timerProvider.remaining != null) {
                               final r = timerProvider.remaining!;
                               final h = r.inHours.toString().padLeft(2, '0');
-                              final m = (r.inMinutes % 60).toString().padLeft(2, '0');
-                              final s = (r.inSeconds % 60).toString().padLeft(2, '0');
+                              final m =
+                                  (r.inMinutes % 60).toString().padLeft(2, '0');
+                              final s =
+                                  (r.inSeconds % 60).toString().padLeft(2, '0');
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('Sleeping Countdown',
                                       style: AppStyle.cardfooter),
-                                  Text(
-                                    '$h:$m:$s',
-                                    // '${sleepCountdown.inHours.toString().padLeft(2, '0')}:${(sleepCountdown.inMinutes % 60).toString().padLeft(2, '0')}:${(sleepCountdown.inSeconds % 60).toString().padLeft(2, '0')}',
-                                    style: AppStyle.cardTitle.copyWith(fontSize: 50)
-                                  ),
+                                  Text('$h:$m:$s',
+                                      // '${sleepCountdown.inHours.toString().padLeft(2, '0')}:${(sleepCountdown.inMinutes % 60).toString().padLeft(2, '0')}:${(sleepCountdown.inSeconds % 60).toString().padLeft(2, '0')}',
+                                      style: AppStyle.cardTitle
+                                          .copyWith(fontSize: 50)),
                                 ],
                               );
                             } else {
@@ -631,10 +640,9 @@ class _ProgressPageState extends State<ProgressPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const Text('No sleep countdown running.'),
-                                  Text(
-                                    '00:00:00',
-                                    style: AppStyle.cardTitle.copyWith(fontSize: 50)
-                                  ),
+                                  Text('00:00:00',
+                                      style: AppStyle.cardTitle
+                                          .copyWith(fontSize: 50)),
                                 ],
                               );
                             }
