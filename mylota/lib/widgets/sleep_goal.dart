@@ -32,7 +32,8 @@ class _SleepGoalState extends State<SleepGoal> {
         }
       });
       if(_bedTime != null && _wakeTime != null){
-        SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
+        SleepScheduleController.saveSleepGoal(
+            _bedTime, _wakeTime, context);
       }
     }
   }
@@ -43,6 +44,16 @@ class _SleepGoalState extends State<SleepGoal> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (_bedTime != null && _wakeTime != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 5.0, bottom: 10.0),
+            child: Center(
+              child: Text(
+                'Sleep Duration: ${_calculateSleepDuration()} hours',
+                style: AppStyle.cardfooter,
+              ),
+            ),
+          ),
         Row(
           children: [
             Expanded(
@@ -92,14 +103,7 @@ class _SleepGoalState extends State<SleepGoal> {
             ),
           ],
         ),
-        if (_bedTime != null && _wakeTime != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 16.0),
-            child: Text(
-              'Sleep Duration: ${_calculateSleepDuration()} hours',
-              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-            ),
-          ),
+
       ],
     );
   }

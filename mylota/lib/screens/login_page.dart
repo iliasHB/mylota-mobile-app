@@ -1,15 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:mylota/screens/main_screen.dart';
 import 'package:mylota/screens/register_page.dart';
-import 'package:provider/provider.dart';
 import '../controller/login_controller.dart';
-import '../core/usecase/provider/water_intake_provider.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_input_decorator.dart';
-import 'home_page.dart'; // Import HomePage
 
 class LoginPage extends StatefulWidget {
   @override
@@ -70,10 +64,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ],
             ),
-            // Image.asset(
-            //   "assets/images/tematics_name.jpeg",
-            //   height: 100,
-            // ),
             const SizedBox(height: 40),
 
             Form(

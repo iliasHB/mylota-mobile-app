@@ -1,13 +1,9 @@
 //
 // import 'dart:math';
 // import 'dart:ui';
-//
 // import 'package:flutter/cupertino.dart';
-// import 'package:flutter_background_service/flutter_background_service.dart';
 // import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// import 'package:mqtt_client/mqtt_server_client.dart';
-// import 'package:smarte/core/constants/api_address.dart';
-// import 'mqtt_client_manager.dart';
+//
 //
 // Future<void> initializeService() async {
 //   final service = FlutterBackgroundService();

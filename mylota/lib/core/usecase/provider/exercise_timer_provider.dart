@@ -30,7 +30,7 @@ class ExerciseTimerProvider with ChangeNotifier {
         notifyListeners();
       } else {
         NotificationService.showNotification(
-          id: 1,
+          id: 9,
           title: 'Exercise Complete! 💪',
           body: 'You finished $_exerciseName!.',
           channelId: 'exercise_timer_channel',

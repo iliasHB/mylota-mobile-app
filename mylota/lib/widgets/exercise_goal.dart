@@ -12,16 +12,22 @@ import '../utils/styles.dart';
 import 'custom_input_decorator.dart';
 
 class ExerciseGoal extends StatefulWidget {
+  const ExerciseGoal({super.key});
+
   @override
   _ExerciseGoalState createState() => _ExerciseGoalState();
 }
 
 class _ExerciseGoalState extends State<ExerciseGoal> {
   double _exerciseGoal = 1.0;
+  bool isLoading = false;
   String _selectedExercise = 'Running';
 
   List<String> dropdownItems = [];
   String? selectedItem;
+
+  void _startLoading() => setState(() => isLoading = true);
+  void _stopLoading() => setState(() => isLoading = false);
 
   @override
   void initState() {
@@ -33,7 +39,8 @@ class _ExerciseGoalState extends State<ExerciseGoal> {
     try {
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
           .collection("user-inputs")
-          .doc("yQtkG0iE0dA0tcrQ8RAW") //3l8kubMtLGsE1kRn9FGN  Change this to your document ID
+          .doc(
+              "yQtkG0iE0dA0tcrQ8RAW") //3l8kubMtLGsE1kRn9FGN  Change this to your document ID
           .get();
 
       if (docSnapshot.exists) {
@@ -50,24 +57,84 @@ class _ExerciseGoalState extends State<ExerciseGoal> {
     }
   }
 
-  // final List<Map<String, dynamic>> _exerciseOptions = [
-  //   {'name': 'Running', 'icon': Icons.directions_run},
-  //   {'name': 'Cycling', 'icon': Icons.pedal_bike},
-  //   {'name': 'Yoga', 'icon': Icons.self_improvement},
-  //   {'name': 'Swimming', 'icon': Icons.pool},
-  //   {'name': 'Weightlifting', 'icon': Icons.fitness_center},
-  //   {'name': 'Walking', 'icon': Icons.directions_walk},
-  //   {'name': 'Gym', 'icon': Icons.sports_gymnastics},
-  //   {'name': 'Tennis', 'icon': Icons.sports_tennis},
-  // ];
-  //
-  // Future<void> _checkAndRequestAlarmPermission() async {
-  //   // Check if the SCHEDULE_EXACT_ALARM permission is granted
-  //   final status = await Permission.scheduleExactAlarm.request();
-  //   if (status.isDenied || status.isPermanentlyDenied) {
-  //     _showPermissionDialog();
-  //   }
-  // }
+  _exercise(String? selectedItem, double exerciseGoal, BuildContext context) {
+    ExerciseScheduleController.saveExerciseGoal(
+      selectedItem,
+      _exerciseGoal,
+      context,
+      onStartLoading: _startLoading,
+      onStopLoading: _stopLoading,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Set Your Exercise Goal', style: AppStyle.cardfooter),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+              value: selectedItem,
+              items: dropdownItems.map<DropdownMenuItem<String>>((exercise) {
+                return DropdownMenuItem<String>(
+                  value: exercise,
+                  child: Text(
+                    exercise,
+                    style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                  ),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedItem = value;
+                });
+              },
+              decoration: customInputDecoration(
+                labelText: '',
+                hintText: 'Choose a exercise',
+                prefixIcon:
+                    const Icon(Icons.run_circle_outlined, color: Colors.green),
+              )),
+          const SizedBox(height: 20),
+          Text(
+            'Set your daily goal (minutes):',
+            style: AppStyle.cardfooter,
+          ),
+          const SizedBox(height: 10),
+          Slider(
+            value: _exerciseGoal,
+            min: 0,
+            max: 120,
+            divisions: 11,
+            activeColor: const Color(0xFF66C3A7), // Updated slider color
+            thumbColor: const Color(0xFF2A7F67), // Thumb color for consistency
+            label: '${_exerciseGoal.round()} mins',
+            onChanged: (value) {
+              setState(() {
+                _exerciseGoal = value;
+              });
+            },
+          ),
+          Center(
+              child: Text(
+            "${_exerciseGoal.toInt()} min",
+            style: AppStyle.cardfooter,
+          )),
+          const SizedBox(height: 20),
+          isLoading
+              ? const CustomContainerLoadingButton()
+              : Center(
+                  child: CustomPrimaryButton(
+                      label: 'Save Goal',
+                      onPressed: () =>
+                          _exercise(selectedItem, _exerciseGoal, context)))
+        ],
+      ),
+    );
+  }
 
   void _showPermissionDialog() {
     showDialog(
@@ -94,93 +161,6 @@ class _ExerciseGoalState extends State<ExerciseGoal> {
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('Cancel'),
           ),
-        ],
-      ),
-    );
-  }
-
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Set Your Exercise Goal',
-              style: AppStyle.cardfooter),
-          const SizedBox(height: 10),
-          DropdownButtonFormField<String>(
-              value: selectedItem,
-              items: dropdownItems.map<DropdownMenuItem<String>>((exercise) {
-                return DropdownMenuItem<String>(
-                  value: exercise,
-                  child: Text(
-                    exercise,
-                    style: AppStyle.cardfooter.copyWith(fontSize: 12),
-                  ),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedItem = value;
-                });
-              },
-              decoration: customInputDecoration(
-                labelText: '',
-                hintText: 'Choose a exercise',
-                prefixIcon:
-                const Icon(Icons.run_circle_outlined, color: Colors.green),
-              )),
-          // DropdownButtonFormField<String>(
-          //   value: selectedItem,
-          //   items: dropdownItems.map((exercise) {
-          //     return DropdownMenuItem<String>(
-          //       value: exercise,
-          //       child: Row(
-          //         children: [
-          //           // Icon(exercise['icon'], color: Colors.green),
-          //           const SizedBox(width: 10),
-          //           Text(exercise),
-          //         ],
-          //       ),
-          //     );
-          //   }).toList(),
-          //   onChanged: (value) {
-          //     setState(() {
-          //       selectedItem = value!;
-          //     });
-          //   },
-          // ),
-          const SizedBox(height: 20),
-          Text(
-            'Set your daily goal (minutes):',
-            style: AppStyle.cardfooter,
-          ),
-          const SizedBox(height: 10),
-          Slider(
-            value: _exerciseGoal,
-            min: 0,
-            max: 120,
-            divisions: 11,
-            activeColor: const Color(0xFF66C3A7), // Updated slider color
-            thumbColor:
-                const Color(0xFF2A7F67), // Thumb color for consistency
-            label: '${_exerciseGoal.round()} mins',
-            onChanged: (value) {
-              setState(() {
-                _exerciseGoal = value;
-              });
-            },
-          ),
-          Center(child: Text("${_exerciseGoal.toInt()} min", style: AppStyle.cardfooter,)),
-          const SizedBox(height: 20),
-          Center(
-            child: CustomPrimaryButton(
-                label: 'Save Goal',
-                onPressed: () => ExerciseScheduleController.saveExerciseGoal(selectedItem, _exerciseGoal, context),)
-          )
         ],
       ),
     );

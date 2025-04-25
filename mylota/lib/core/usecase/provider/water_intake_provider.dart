@@ -9,7 +9,7 @@ class WaterReminderProvider with ChangeNotifier {
 
   Future<void> startDailyWaterIntakeTimer(String intakeLiters, String reminderTime, bool acknowledged) async {
     if (acknowledged) {
-      await NotificationService.cancelReminder(); // Cancel existing notifications if acknowledged
+      await NotificationService.cancelWaterIntakeReminder(); // Cancel existing notifications if acknowledged
       return;
     }
 
@@ -23,7 +23,7 @@ class WaterReminderProvider with ChangeNotifier {
 
   // Mark the reminder as done for today
   Future<void> markAsDoneForToday() async {
-    await NotificationService.cancelReminder(); // Cancel notifications
+    await NotificationService.cancelWaterIntakeReminder(); // Cancel notifications
 
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;

@@ -10,6 +10,8 @@ import '../utils/styles.dart';
 import 'custom_input_decorator.dart';
 
 class MealPlanner extends StatefulWidget {
+  const MealPlanner({super.key});
+
   @override
   _MealPlannerState createState() => _MealPlannerState();
 }
@@ -27,6 +29,10 @@ class _MealPlannerState extends State<MealPlanner> {
   String? selectedItem;
   List<String> dropdownItemsVeg2 = [];
   String? selectedItem2;
+
+  bool isLoading = false;
+  void _startLoading() => setState(() => isLoading = true);
+  void _stopLoading() => setState(() => isLoading = false);
   @override
   void initState() {
     super.initState();
@@ -57,7 +63,6 @@ class _MealPlannerState extends State<MealPlanner> {
       print("Error fetching dropdown data: $e");
     }
   }
-
 
   // Future<void> _saveMeals() async {
   //   if (_mealController.text.isEmpty) {
@@ -153,24 +158,23 @@ class _MealPlannerState extends State<MealPlanner> {
 
   Future<void> _pickTime(BuildContext context, bool isMealTime) async {
     final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: (_mealTime ?? TimeOfDay(hour: 22, minute: 0))
-      // isMealTime
-      //     ? (_mealTime ?? TimeOfDay(hour: 22, minute: 0))
-      //     : (_wakeTime ?? TimeOfDay(hour: 6, minute: 0)),
-    );
+        context: context,
+        initialTime: (_mealTime ?? TimeOfDay(hour: 22, minute: 0))
+        // isMealTime
+        //     ? (_mealTime ?? TimeOfDay(hour: 22, minute: 0))
+        //     : (_wakeTime ?? TimeOfDay(hour: 6, minute: 0)),
+        );
 
     if (pickedTime != null) {
       setState(() {
         // if (isMealTime) {
-          _mealTime = pickedTime;
+        _mealTime = pickedTime;
         // } else {
         //   _wakeTime = pickedTime;
         // }
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +187,8 @@ class _MealPlannerState extends State<MealPlanner> {
           children: [
             DropdownButtonFormField<String>(
                 value: _selectedDayCategory,
-                items: Constant.days.entries.map<DropdownMenuItem<String>>((category) {
+                items: Constant.days.entries
+                    .map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category.value,
                     child: Text(
@@ -201,12 +206,13 @@ class _MealPlannerState extends State<MealPlanner> {
                   labelText: 'Day of the week',
                   hintText: '',
                   prefixIcon:
-                  const Icon(Icons.today_sharp, color: Colors.green),
+                      const Icon(Icons.today_sharp, color: Colors.green),
                 )),
             const SizedBox(height: 10),
             DropdownButtonFormField<String>(
                 value: _selectedCategory,
-                items: Constant.meals.entries.map<DropdownMenuItem<String>>((category) {
+                items: Constant.meals.entries
+                    .map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category.value,
                     child: Text(
@@ -223,31 +229,31 @@ class _MealPlannerState extends State<MealPlanner> {
                 decoration: customInputDecoration(
                   labelText: 'Select Meal Period',
                   hintText: '',
-                  prefixIcon:
-                  const Icon(Icons.timelapse, color: Colors.green),
+                  prefixIcon: const Icon(Icons.timelapse, color: Colors.green),
                 )),
 
             const SizedBox(height: 10),
 
             // Meal input field
             TextFormField(
-                controller: _mealTimeController,
+              controller: _mealTimeController,
               readOnly: true,
-                decoration: InputDecoration(
-                  // enabled: isDisable,
-                  prefixIcon: const Icon(Icons.access_time, color: Colors.green),
-                  filled: true,
-                  fillColor: Color(0xFF2A7F67).withOpacity(0.3),
-                  //labelStyle: AppStyle.cardfooter.copyWith(fontSize: 12),
-                  hintStyle:  AppStyle.cardfooter.copyWith(fontSize: 12,),
-                    hintText: _mealTime == null
-                        ? 'Set meal time'
-                        : 'Meal time: ${_mealTime!.format(context)}',
-                  border: OutlineInputBorder(
-                      borderSide: BorderSide.none,
-                      borderRadius: BorderRadius.circular(5)),
+              decoration: InputDecoration(
+                // enabled: isDisable,
+                prefixIcon: const Icon(Icons.access_time, color: Colors.green),
+                filled: true,
+                fillColor: Color(0xFF2A7F67).withOpacity(0.3),
+                //labelStyle: AppStyle.cardfooter.copyWith(fontSize: 12),
+                hintStyle: AppStyle.cardfooter.copyWith(
+                  fontSize: 12,
                 ),
-
+                hintText: _mealTime == null
+                    ? 'Set meal time'
+                    : 'Meal time: ${_mealTime!.format(context)}',
+                border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(5)),
+              ),
               onTap: () => _pickTime(context, true),
             ),
             const SizedBox(height: 10),
@@ -258,7 +264,8 @@ class _MealPlannerState extends State<MealPlanner> {
                 decoration: customInputDecoration(
                   labelText: 'Enter meal',
                   hintText: 'e.g. Rice, Chicken',
-                  prefixIcon: const Icon(Icons.restaurant_menu, color: Colors.green),
+                  prefixIcon:
+                      const Icon(Icons.restaurant_menu, color: Colors.green),
                 )),
             // TextFormField(
             //   controller: _mealController,
@@ -296,41 +303,16 @@ class _MealPlannerState extends State<MealPlanner> {
                 decoration: customInputDecoration(
                   labelText: 'Select vegetable 1',
                   hintText: 'Choose second veges',
-                  prefixIcon:
-                  const Icon(Icons.set_meal, color: Colors.green),
+                  prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
                 )),
 
-            // DropdownButtonFormField<String>(
-            //   decoration: customInputDecoration(
-            //     labelText: 'Select a first veges color',
-            //     hintText: 'Choose a veges',
-            //     prefixIcon:
-            //     const Icon(Icons.warehouse, color: Colors.green),
-            //   ),
-            //   value: selectedItem,
-            //   items: dropdownItems.map((exercise) {
-            //     return DropdownMenuItem<String>(
-            //       value: exercise,
-            //       child: Row(
-            //         children: [
-            //           const SizedBox(width: 10),
-            //           Text(exercise),
-            //         ],
-            //       ),
-            //     );
-            //   }).toList(),
-            //   onChanged: (value) {
-            //     setState(() {
-            //       selectedItem = value!;
-            //     });
-            //   },
-            // ),
             const SizedBox(height: 10),
 
             // Category dropdown
             DropdownButtonFormField<String>(
                 value: selectedItem2,
-                items: dropdownItemsVeg2.map<DropdownMenuItem<String>>((category) {
+                items:
+                    dropdownItemsVeg2.map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category,
                     child: Text(
@@ -347,33 +329,21 @@ class _MealPlannerState extends State<MealPlanner> {
                 decoration: customInputDecoration(
                   labelText: 'Select vegetable 2',
                   hintText: 'Choose second veges',
-                  prefixIcon:
-                  const Icon(Icons.set_meal, color: Colors.green),
+                  prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
                 )),
             const SizedBox(height: 20),
 
             // Add meal button
             Center(
-              child: CustomPrimaryButton(
-                  label: 'Add Meal',
-                  onPressed: (){
-                      if (_formKey.currentState?.validate() ?? false) {
-                        _saveMeals();
-                      }
-                  })
-              // ElevatedButton(
-              //   onPressed: () {
-              //     if (_formKey.currentState?.validate() ?? false) {
-              //       _saveMeals();
-              //     }
-              //   },
-              //   child: const Text('Add Meal'),
-              //   style: ElevatedButton.styleFrom(
-              //       padding: const EdgeInsets.symmetric(
-              //           horizontal: 30, vertical: 15),
-              //       shadowColor: Colors.grey),
-              // ),
-            ),
+                child: isLoading
+                    ? const CustomContainerLoadingButton()
+                    : CustomPrimaryButton(
+                        label: 'Add Meal',
+                        onPressed: () {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            _saveMeals();
+                          }
+                        })),
             const SizedBox(height: 20),
           ],
         ),
@@ -383,13 +353,15 @@ class _MealPlannerState extends State<MealPlanner> {
 
   void _saveMeals() {
     MealPlannerController.saveMeals(
-      context: context,
+        context: context,
         mealController: _mealController.text.trim(),
-      selectedCategory: _selectedCategory,
+        selectedCategory: _selectedCategory,
         selectedDayCategory: _selectedDayCategory,
         mealTime: _mealTime,
         selectedItem: selectedItem,
-        selectedItem2: selectedItem2
+        selectedItem2: selectedItem2,
+        onStartLoading: _startLoading,
+        onStopLoading: _stopLoading
     );
   }
 
@@ -497,12 +469,7 @@ class _MealPlannerState extends State<MealPlanner> {
   //     );
   //   }
   // }
-
-
 }
-
-
-
 
 // // Add a new meal with vegetable validation
 // void _addMeal() {
