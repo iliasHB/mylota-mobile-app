@@ -233,8 +233,8 @@ class _ProgressPageState extends State<ProgressPage> {
                                   //   color: Colors.green,
                                   // ),
                                   ),
-                              title: 'Todo',
-                              subTitle: "Recent Todos",
+                              title: 'To-do',
+                              subTitle: "Recent To-dos",
                             )),
                         const SizedBox(
                           height: 10,
@@ -252,7 +252,7 @@ class _ProgressPageState extends State<ProgressPage> {
                             ),
                             StreamBuilder(
                               stream: FirebaseFirestore.instance
-                                  .collection('todo-goals')
+                                  .collection('to-do-goals')
                                   .doc(FirebaseAuth.instance.currentUser?.uid)
                                   .snapshots(),
                               builder: (context,

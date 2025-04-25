@@ -39,7 +39,7 @@ class _MentalStimulationWidgetState extends State<MentalStimulationWidget> {
           decoration:  customInputDecoration(
             labelText: "Enter a learning task",
             prefixIcon: const Icon(Icons.bookmark_add_outlined),
-            hintText: 'Enter a learning task',
+            hintText: 'learning task e.g "I want to learn French"',
           ),
         ),
         const SizedBox(height: 20),

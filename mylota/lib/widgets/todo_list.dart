@@ -103,7 +103,7 @@ class _ToDoListState extends State<ToDoList> {
             cursorColor: const Color(0xFF66C3A7),
             decoration: customInputDecoration(
                 labelText: 'Task Title',
-                hintText: 'Enter task title',
+                hintText: 'Enter task',
                 prefixIcon: const Icon(Icons.task, color: Colors.green)),
             validator: (value) {
               if (_taskTitleController.text.isEmpty ||
@@ -113,7 +113,7 @@ class _ToDoListState extends State<ToDoList> {
               return null;
             },
           ),
-          const SizedBox(height: 10),
+          /* const SizedBox(height: 10),
           TextFormField(
             controller: _taskDescController,
             cursorColor: const Color(0xFF66C3A7),
@@ -128,7 +128,7 @@ class _ToDoListState extends State<ToDoList> {
               }
               return null;
             },
-          ),
+          ), */
           const SizedBox(height: 10),
           tasks.isEmpty
               ? const Center(child: Text('No tasks added yet.'))
