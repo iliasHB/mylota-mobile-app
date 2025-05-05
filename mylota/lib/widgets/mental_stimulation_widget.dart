@@ -39,7 +39,7 @@ class _MentalStimulationWidgetState extends State<MentalStimulationWidget> {
           decoration:  customInputDecoration(
             labelText: "Enter a learning task",
             prefixIcon: const Icon(Icons.bookmark_add_outlined),
-            hintText: 'learning task e.g "I want to learn French"',
+            hintText: "e.g I want to learn French"
           ),
         ),
         const SizedBox(height: 20),
@@ -48,7 +48,7 @@ class _MentalStimulationWidgetState extends State<MentalStimulationWidget> {
             label: 'Submit',
             onPressed: () {  },),
         ),
-        const SizedBox(height: 10),
+        //const SizedBox(height: 10),
         // ElevatedButton(
         //   onPressed: _checkTask,
         //   style: ElevatedButton.styleFrom(

@@ -77,7 +77,7 @@ class _ChallengePageState extends State<ChallengePage> {
                 children: [
                   _buildMemoryTest(),
                   const SizedBox(height: 20),
-                  _buildPatternGame(),
+                 // _buildPatternGame(),
                   const SizedBox(height: 20),
                   _buildLeaderboard(),
                 ],
@@ -141,7 +141,7 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   // Pattern Recognition Game Section
-  Widget _buildPatternGame() {
+  /* Widget _buildPatternGame() {
     return Card(
       color: Colors.white.withOpacity(0.9),
       child: Padding(
@@ -162,8 +162,8 @@ class _ChallengePageState extends State<ChallengePage> {
       ),
     );
   }
-
-  void _generatePattern() {
+ */
+  /* void _generatePattern() {
     List<int> pattern = List.generate(patternLevel + 2, (index) => Random().nextInt(9));
     List<int> userPattern = List.from(pattern);
     userPattern.shuffle();
@@ -226,7 +226,7 @@ class _ChallengePageState extends State<ChallengePage> {
         );
       },
     );
-  }
+  } */
 
   // Leaderboard Section
   Widget _buildLeaderboard() {

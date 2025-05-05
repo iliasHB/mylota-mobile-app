@@ -19,7 +19,7 @@ class CustomPrimaryButton extends StatelessWidget {
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
     this.textStyle,
-    this.borderRadius = 10.0,
+    this.borderRadius = 10.0, required Text child,
   });
 
   @override

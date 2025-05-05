@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:mylota/utils/styles.dart';
+import 'package:mylota/widgets/pattern_recognition_game.dart';
+import 'package:mylota/widgets/puzzle_game.dart';
+import 'package:mylota/widgets/cognitive_tasks_page.dart';
 import '../widgets/custom_input_decorator.dart';
 import '../widgets/mental_stimulation_widget.dart';
+import 'package:mylota/widgets/mindfulness_activities_widget.dart';
 
 class MentalStimulationPage extends StatefulWidget {
   @override
@@ -25,10 +29,29 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
 
   // Well-being reminders
   TimeOfDay? callSomeoneTime;
+  DateTime? callSomeoneDate;
+  String? callSomeoneContact;
+
   TimeOfDay? checkLoverTime;
+  DateTime? checkLoverDate;
+  String? checkLoverContact;
+
   TimeOfDay? selfTreatTime;
 
   List<String> dropdownItems = [];
+
+  Future<void> _pickDate(BuildContext context, String title, Function(DateTime) onDateSelected) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      onDateSelected(pickedDate);
+    }
+  }
 
   Future<void> _pickTime(BuildContext context, String title, Function(TimeOfDay) onTimeSelected) async {
     final TimeOfDay? pickedTime = await showTimePicker(
@@ -91,43 +114,64 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               _buildSection(
                 title: 'Challenge Your Thinking',
                 subtitle: 'Select an activity to challenge your brain:',
-                child:
-                DropdownButtonFormField<String>(
-                    value: selectedChallenge,
-                    items: dropdownItems.map<DropdownMenuItem<String>>((challenge) {
-                      return DropdownMenuItem<String>(
-                        value: challenge,
-                        child: Text(
-                          challenge,
-                          style: AppStyle.cardfooter.copyWith(fontSize: 12),
-                        ),
+                icon: const Icon(Icons.psychology),
+                
+                child: DropdownButtonFormField<String>(
+                  value: selectedChallenge,
+                  items: [
+                    DropdownMenuItem(
+                      value: 'Puzzle',
+                      child: Text(
+                        'Puzzle',
+                        style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Pattern Recognition',
+                      child: Text(
+                        'Pattern Recognition',
+                        style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'Cognitive Tasks',
+                      child: Text(
+                        'Cognitive Tasks',
+                        style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() {
+                      selectedChallenge = value;
+                    });
+
+                    // Navigate to specific game screens based on the selected challenge
+                    if (value == 'Puzzle') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PuzzleGame()),
                       );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        selectedChallenge = value;
-                      });
-                    },
-                    decoration: customInputDecoration(
-                      labelText: 'Choose a challenge',
-                      hintText: 'Choose a challenge',
-                      prefixIcon:
-                      const Icon(Icons.run_circle_outlined, color: Colors.green),
-                    )),
-                // const SizedBox(height: 20),
-                // DropdownButton<String>(
-                //   value: selectedChallenge,
-                //   hint: const Text('Select a challenge'),
-                //   items: const [
-                //     DropdownMenuItem(value: 'Puzzles & Games', child: Text('Puzzles & Games (e.g., Sudoku, chess)')),
-                //     DropdownMenuItem(value: 'Cognitive Tasks', child: Text('Cognitive Tasks (e.g., math problems, quick decision-making tests)')),
-                //   ],
-                //   onChanged: (value) {
-                //     setState(() {
-                //       selectedChallenge = value;
-                //     });
-                //   },
-                // ),
+                    } 
+                    else if (value == 'Pattern Recognition') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PatternRecognitionGame()),
+                      );
+                    }
+                    else if (value == 'Cognitive Tasks') {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CognitiveTasksPage()),
+                      );
+                    }
+                  },
+                  decoration: customInputDecoration(
+                    labelText: 'Choose a challenge',
+                    hintText: 'Choose a challenge',
+                    prefixIcon: const Icon(Icons.run_circle_outlined, color: Colors.green),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -135,67 +179,47 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 title: 'Stay Focused',
                 subtitle: 'Select an activity to improve focus:',
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     DropdownButtonFormField<String>(
-                        value: selectedFocusActivity,
-                        items: dropdownItems.map<DropdownMenuItem<String>>((focus) {
-                          return DropdownMenuItem<String>(
-                            value: focus,
-                            child: Text(
-                              focus,
-                              style: AppStyle.cardfooter.copyWith(fontSize: 12),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            selectedFocusActivity = value;
-                          });
-                        },
-                        decoration: customInputDecoration(
-                          labelText: 'Choose activity',
-                          hintText: 'Choose activity',
-                          prefixIcon:
-                          const Icon(Icons.run_circle_outlined, color: Colors.green),
-                        )),
-                    // DropdownButton<String>(
-                    //   value: selectedFocusActivity,
-                    //   hint: const Text('Select an activity'),
-                    //   items: const [
-                    //     DropdownMenuItem(value: 'Meditation & Mindfulness', child: Text('Meditation & Mindfulness (e.g., breathing exercises, guided focus)')),
-                    //     DropdownMenuItem(value: 'Learning Modules', child: Text('Learning Modules (e.g., new words, languages, or skills)')),
-                    //   ],
-                    //   onChanged: (value) {
-                    //     setState(() {
-                    //       selectedFocusActivity = value;
-                    //     });
-                    //   },
-                    // ),
-                    if (selectedFocusActivity == 'Learning Modules')
-                      Column(
-                        children: [
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _learningModuleController,
-                            decoration: const InputDecoration(
-                              hintText: 'Enter a new learning module...',
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          ElevatedButton(
-                            onPressed: () {
-                              if (_learningModuleController.text.isNotEmpty) {
-                                setState(() {
-                                  learningModules.add(_learningModuleController.text);
-                                  _learningModuleController.clear();
-                                });
-                              }
-                            },
-                            child: const Text('Add Learning Module'),
-                          ),
-                        ],
+                      value: selectedFocusActivity,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Box Breathing',
+                          child: Text('Box Breathing'),
+                        ),
+                        DropdownMenuItem(
+                          value: '5-4-3-2-1 Grounding Exercise',
+                          child: Text('5-4-3-2-1 Grounding Exercise'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Single-Task Focus',
+                          child: Text('Single-Task Focus'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Mindful Walking',
+                          child: Text('Mindful Walking'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Mindful Listening',
+                          child: Text('Mindful Listening'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedFocusActivity = value;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Choose activity',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
+                    ),
+                    const SizedBox(height: 20),
+                    if (selectedFocusActivity != null)
+                      MindfulnessActivitiesWidget(activity: selectedFocusActivity!),
                   ],
                 ),
               ),
@@ -207,7 +231,9 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Puzzles & Games Score:'),
+                    const Text('Learning Progress:'),
+                    LinearProgressIndicator(value: learningProgress / 100),
+                    const Text('Puzzle Score:'),
                     LinearProgressIndicator(value: puzzleScore / 100),
                     const SizedBox(height: 10),
                     const Text('Cognitive Tasks Score:'),
@@ -216,8 +242,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                     const Text('Meditation Minutes:'),
                     LinearProgressIndicator(value: meditationMinutes / 60),
                     const SizedBox(height: 10),
-                    const Text('Learning Progress:'),
-                    LinearProgressIndicator(value: learningProgress / 100),
+                    
                   ],
                 ),
               ),
@@ -229,23 +254,47 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 icon: const Icon(Icons.favorite),
                 child: Column(
                   children: [
-                    _buildReminderTile(
+                    _buildReminderTileWithDateAndContact(
                       title: "Call Someone (Family/Friend)",
                       time: callSomeoneTime,
-                      onPressed: () => _pickTime(context, "Call Someone", (time) {
+                      date: callSomeoneDate,
+                      contact: callSomeoneContact,
+                      onTimePressed: () => _pickTime(context, "Call Someone", (time) {
                         setState(() {
                           callSomeoneTime = time;
                         });
                       }),
+                      onDatePressed: () => _pickDate(context, "Call Someone", (date) {
+                        setState(() {
+                          callSomeoneDate = date;
+                        });
+                      }),
+                      onContactChanged: (contact) {
+                        setState(() {
+                          callSomeoneContact = contact;
+                        });
+                      },
                     ),
-                    _buildReminderTile(
+                    _buildReminderTileWithDateAndContact(
                       title: "Check on Spouse / Partner",
                       time: checkLoverTime,
-                      onPressed: () => _pickTime(context, "Check on Spouse / Partner", (time) {
+                      date: checkLoverDate,
+                      contact: checkLoverContact,
+                      onTimePressed: () => _pickTime(context, "Check on Spouse / Partner", (time) {
                         setState(() {
                           checkLoverTime = time;
                         });
                       }),
+                      onDatePressed: () => _pickDate(context, "Check on Spouse / Partner", (date) {
+                        setState(() {
+                          checkLoverDate = date;
+                        });
+                      }),
+                      onContactChanged: (contact) {
+                        setState(() {
+                          checkLoverContact = contact;
+                        });
+                      },
                     ),
                     _buildReminderTile(
                       title: "Give Yourself a Treat",
@@ -329,49 +378,71 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
       ),
     );
   }
+
+  Widget _buildReminderTileWithDateAndContact({
+    required String title,
+    TimeOfDay? time,
+    DateTime? date,
+    String? contact,
+    required VoidCallback onTimePressed,
+    required VoidCallback onDatePressed,
+    required ValueChanged<String> onContactChanged,
+  }) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  time != null ? "Time: ${time.format(context)}" : "Time: Not set",
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.access_time, color: Color(0xFF66C3A7)),
+                  onPressed: onTimePressed,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  date != null
+                      ? "Date: ${date.day}/${date.month}/${date.year}"
+                      : "Date: Not set",
+                  style: const TextStyle(color: Colors.grey),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today, color: Color(0xFF66C3A7)),
+                  onPressed: onDatePressed,
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              decoration: const InputDecoration(
+                labelText: "Contact Name",
+                border: OutlineInputBorder(),
+              ),
+              onChanged: onContactChanged,
+              controller: TextEditingController(text: contact),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
-
-
-// Widget _buildSection({
-//   required String title,
-//   required String subtitle,
-//   required Widget child,
-//   IconData? icon,
-// }) {
-//   return Card(
-//     elevation: 4,
-//     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-//     color: Colors.white.withOpacity(0.9),
-//     child: Padding(
-//       padding: const EdgeInsets.all(16.0),
-//       child: Column(
-//         crossAxisAlignment: CrossAxisAlignment.start,
-//         mainAxisAlignment: MainAxisAlignment.start,
-//         children: [
-//           Row(
-//             children: [
-//               if (icon != null) Icon(icon, color: Color(0xFF66C3A7)), // Updated icon color
-//               const SizedBox(width: 8),
-//               Column(
-//                 children: [
-//                   Text(
-//                     title,
-//                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//                   ),
-//                   const SizedBox(height: 10),
-//                   Text(
-//                     subtitle,
-//                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//
-//           const SizedBox(height: 10),
-//           child,
-//         ],
-//       ),
-//     ),
-//   );
-// }

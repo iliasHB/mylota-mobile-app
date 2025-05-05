@@ -9,7 +9,8 @@ class PuzzleGame extends StatefulWidget {
 }
 
 class _PuzzleGameState extends State<PuzzleGame> {
-  final int gridSize = 3; // 3x3 grid
+  final int gridColumns = 4; // Number of columns
+  final int gridRows = 3; // Number of rows
   late List<int> tiles;
 
   @override
@@ -19,7 +20,7 @@ class _PuzzleGameState extends State<PuzzleGame> {
   }
 
   void _initializeTiles() {
-    tiles = List.generate(gridSize * gridSize, (index) => index);
+    tiles = List.generate(gridColumns * gridRows, (index) => index);
     tiles.shuffle(Random());
   }
 
@@ -34,10 +35,10 @@ class _PuzzleGameState extends State<PuzzleGame> {
   }
 
   bool _isAdjacent(int index1, int index2) {
-    int row1 = index1 ~/ gridSize;
-    int col1 = index1 % gridSize;
-    int row2 = index2 ~/ gridSize;
-    int col2 = index2 % gridSize;
+    int row1 = index1 ~/ gridColumns;
+    int col1 = index1 % gridColumns;
+    int row2 = index2 ~/ gridColumns;
+    int col2 = index2 % gridColumns;
 
     return (row1 == row2 && (col1 - col2).abs() == 1) ||
         (col1 == col2 && (row1 - row2).abs() == 1);
@@ -64,7 +65,7 @@ class _PuzzleGameState extends State<PuzzleGame> {
             GridView.builder(
               shrinkWrap: true,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: gridSize,
+                crossAxisCount: gridColumns, // Set the number of columns
                 crossAxisSpacing: 4.0,
                 mainAxisSpacing: 4.0,
               ),
