@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+import 'package:mylota/widgets/custom_button.dart';
+
 class PuzzleGame extends StatefulWidget {
   const PuzzleGame({Key? key}) : super(key: key);
 
@@ -98,14 +100,15 @@ class _PuzzleGameState extends State<PuzzleGame> {
                 'Congratulations! You solved the puzzle!',
                 style: TextStyle(fontSize: 18, color: Colors.green),
               ),
-            ElevatedButton(
+            CustomPrimaryButton(
+              label: 'Restart',
               onPressed: () {
                 setState(() {
                   _initializeTiles();
                 });
-              },
-              child: const Text('Restart'),
-            ),
+              },),
+              //child: const Text('Restart'),
+            
           ],
         ),
       ),

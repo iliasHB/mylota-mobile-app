@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_contact_picker/model/contact.dart';
 import 'package:mylota/utils/styles.dart';
+import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/pattern_recognition_game.dart';
 import 'package:mylota/widgets/puzzle_game.dart';
 import 'package:mylota/widgets/cognitive_tasks_page.dart';
 import '../widgets/custom_input_decorator.dart';
 import '../widgets/mental_stimulation_widget.dart';
 import 'package:mylota/widgets/mindfulness_activities_widget.dart';
+import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MentalStimulationPage extends StatefulWidget {
   @override
@@ -27,6 +31,8 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   int meditationMinutes = 0;
   int learningProgress = 0;
 
+  int patternRecognitionScore = 0; // Added variable for pattern recognition score
+
   // Well-being reminders
   TimeOfDay? callSomeoneTime;
   DateTime? callSomeoneDate;
@@ -37,6 +43,13 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   String? checkLoverContact;
 
   TimeOfDay? selfTreatTime;
+  DateTime? selfTreatDate;
+  String? selfTreatContact;
+
+  String? selfTreatLocation;
+
+  DateTime? learningJourneyDate;
+  TimeOfDay? learningJourneyTime;
 
   List<String> dropdownItems = [];
 
@@ -61,6 +74,132 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
 
     if (pickedTime != null) {
       onTimeSelected(pickedTime);
+    }
+  }
+
+  Future<void> _pickDateTime(BuildContext context, String title, Function(DateTime) onDateTimeSelected) async {
+    // Pick the date first
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      // Pick the time after selecting the date
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null) {
+        // Combine the date and time into a DateTime object
+        final DateTime combinedDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        onDateTimeSelected(combinedDateTime);
+      }
+    }
+  }
+
+  Future<void> _saveGameScore(String gameType, int score) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("Mental stimulation")
+          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .collection("game-scores")
+          .add({
+        "gameType": gameType,
+        "score": score,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$gameType score saved: $score")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save $gameType score: $e")),
+      );
+    }
+  }
+
+  Future<void> _saveFocusActivity(String activity) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("Mental stimulation")
+          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .collection("focus-activities")
+          .add({
+        "activity": activity,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Focus activity saved: $activity")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save focus activity: $e")),
+      );
+    }
+  }
+
+  Future<void> _saveLearningJourney(String task, DateTime date) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("Mental stimulation")
+          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .collection("learning-journey")
+          .add({
+        "task": task,
+        "date": date.toIso8601String(),
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Learning task saved: $task")),
+      );
+
+      // Clear the input field and reset the date/time
+      _learningModuleController.clear();
+      setState(() {
+        learningJourneyDate = null;
+        learningJourneyTime = null;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save learning task: $e")),
+      );
+    }
+  }
+
+  Future<void> _saveWellBeingReminder(String title, DateTime? date, String? detail) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("Mental stimulation")
+          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .collection("well-being-reminders")
+          .add({
+        "title": title,
+        "date": date?.toIso8601String(),
+        "detail": detail,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$title reminder saved")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save $title reminder: $e")),
+      );
     }
   }
 
@@ -105,10 +244,57 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               const SizedBox(height: 20),
 
               _buildSection(
-                title: 'learning journey',
+                title: 'Learning Journey',
                 subtitle: 'Engage in new learning.',
                 icon: const Icon(Icons.lightbulb),
-                child: const MentalStimulationWidget(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _learningModuleController,
+                      decoration: customInputDecoration(
+                        labelText: 'Enter a learning task',
+                        hintText: 'e.g Learn a new language',
+                        prefixIcon: const Icon(Icons.book, color: Colors.green),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          learningJourneyDate != null
+                              ? "Date & Time: ${learningJourneyDate!.day}/${learningJourneyDate!.month}/${learningJourneyDate!.year} ${learningJourneyTime?.format(context) ?? ''}"
+                              : "Date & Time: Not set",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.calendar_today, color: Color(0xFF66C3A7)),
+                          onPressed: () => _pickDateTime(context, "Learning Journey", (dateTime) {
+                            setState(() {
+                              learningJourneyDate = dateTime;
+                              learningJourneyTime = TimeOfDay.fromDateTime(dateTime);
+                            });
+                          }),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    CustomPrimaryButton(
+                      label: "Save Learning Task",
+                      onPressed: () {
+                        if (_learningModuleController.text.isNotEmpty && learningJourneyDate != null) {
+                          _saveLearningJourney(_learningModuleController.text, learningJourneyDate!);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please enter a task and set a date/time.")),
+                          );
+                        }
+                      },
+                      //child: const Text("Save Learning Task"),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 10),
               _buildSection(
@@ -168,8 +354,8 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                   },
                   decoration: customInputDecoration(
                     labelText: 'Choose a challenge',
-                    hintText: 'Choose a challenge',
-                    prefixIcon: const Icon(Icons.run_circle_outlined, color: Colors.green),
+                    hintText: 'Choose a game',
+                    prefixIcon: const Icon(Icons.videogame_asset, color: Colors.green),
                   ),
                 ),
               ),
@@ -178,6 +364,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               _buildSection(
                 title: 'Stay Focused',
                 subtitle: 'Select an activity to improve focus:',
+                icon: const Icon(Icons.self_improvement), 
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -210,19 +397,29 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                           selectedFocusActivity = value;
                         });
                       },
-                      decoration: InputDecoration(
+                      decoration: customInputDecoration(
                         labelText: 'Choose activity',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        hintText: 'e.g Mindful listening',
+                        prefixIcon: Icon(Icons.do_not_disturb, color: Colors.green),
                       ),
+                                      
                     ),
+                   
                     const SizedBox(height: 20),
                     if (selectedFocusActivity != null)
                       MindfulnessActivitiesWidget(activity: selectedFocusActivity!),
+                    const SizedBox(height: 10),
+                    if (selectedFocusActivity != null)
+                      ElevatedButton(
+                        onPressed: () {
+                          _saveFocusActivity(selectedFocusActivity!);
+                        },
+                        child: const Text("Save Focus Activity"),
+                      ),
                   ],
                 ),
               ),
+              
               const SizedBox(height: 20),
 
               _buildSection(
@@ -243,6 +440,15 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                     LinearProgressIndicator(value: meditationMinutes / 60),
                     const SizedBox(height: 10),
                     
+                    // Save game scores
+                    ElevatedButton(
+                      onPressed: () {
+                        _saveGameScore("Puzzle", puzzleScore);
+                        _saveGameScore("Pattern Recognition", patternRecognitionScore);
+                        _saveGameScore("Cognitive Tasks", cognitiveScore);
+                      },
+                      child: const Text("Save Scores"),
+                    ),
                   ],
                 ),
               ),
@@ -256,54 +462,106 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                   children: [
                     _buildReminderTileWithDateAndContact(
                       title: "Call Someone (Family/Friend)",
-                      time: callSomeoneTime,
                       date: callSomeoneDate,
                       contact: callSomeoneContact,
-                      onTimePressed: () => _pickTime(context, "Call Someone", (time) {
+                      onDateTimePressed: () => _pickDateTime(context, "Call Someone", (dateTime) {
                         setState(() {
-                          callSomeoneTime = time;
+                          callSomeoneDate = dateTime; // Store the combined DateTime
+                          callSomeoneTime = TimeOfDay.fromDateTime(dateTime); // Extract TimeOfDay for display
                         });
                       }),
-                      onDatePressed: () => _pickDate(context, "Call Someone", (date) {
-                        setState(() {
-                          callSomeoneDate = date;
-                        });
-                      }),
-                      onContactChanged: (contact) {
-                        setState(() {
-                          callSomeoneContact = contact;
-                        });
+                      onContactPressed: () async {
+                        final FlutterNativeContactPicker contactPicker = FlutterNativeContactPicker();
+                        try {
+                          final Contact? contact = await contactPicker.selectContact();
+                          setState(() {
+                            callSomeoneContact = contact?.fullName ?? "Unknown Contact";
+                          });
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Failed to pick contact: $e")),
+                          );
+                        }
+                      },
+                      onSavePressed: () {
+                        if (callSomeoneDate != null && callSomeoneContact != null) {
+                          _saveWellBeingReminder(
+                            "Call Someone (Family/Friend)",
+                            callSomeoneDate,
+                            callSomeoneContact,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please set both date/time and contact before saving.")),
+                          );
+                        }
                       },
                     ),
                     _buildReminderTileWithDateAndContact(
                       title: "Check on Spouse / Partner",
-                      time: checkLoverTime,
                       date: checkLoverDate,
                       contact: checkLoverContact,
-                      onTimePressed: () => _pickTime(context, "Check on Spouse / Partner", (time) {
+                      onDateTimePressed: () => _pickDateTime(context, "Check on Spouse / Partner", (dateTime) {
                         setState(() {
-                          checkLoverTime = time;
+                          checkLoverDate = dateTime; // Store the combined DateTime
+                          checkLoverTime = TimeOfDay.fromDateTime(dateTime); // Extract TimeOfDay for display
                         });
                       }),
-                      onDatePressed: () => _pickDate(context, "Check on Spouse / Partner", (date) {
-                        setState(() {
-                          checkLoverDate = date;
-                        });
-                      }),
-                      onContactChanged: (contact) {
-                        setState(() {
-                          checkLoverContact = contact;
-                        });
+                      onContactPressed: () async {
+                        final FlutterNativeContactPicker contactPicker = FlutterNativeContactPicker();
+                        try {
+                          final Contact? contact = await contactPicker.selectContact();
+                          setState(() {
+                            checkLoverContact = contact?.fullName ?? "Unknown Contact";
+                          });
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Failed to pick contact: $e")),
+                          );
+                        }
+                      },
+                      onSavePressed: () {
+                        if (checkLoverDate != null && checkLoverContact != null) {
+                          _saveWellBeingReminder(
+                            "Check on Spouse / Partner",
+                            checkLoverDate,
+                            checkLoverContact,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please set both date/time and contact before saving.")),
+                          );
+                        }
                       },
                     ),
-                    _buildReminderTile(
+                    _buildReminderTileWithDateAndLocation(
                       title: "Give Yourself a Treat",
-                      time: selfTreatTime,
-                      onPressed: () => _pickTime(context, "Give Yourself a Treat", (time) {
+                      date: selfTreatDate,
+                      location: selfTreatLocation,
+                      onDateTimePressed: () => _pickDateTime(context, "Give Yourself a Treat", (dateTime) {
                         setState(() {
-                          selfTreatTime = time;
+                          selfTreatDate = dateTime; // Store the combined DateTime
+                          selfTreatTime = TimeOfDay.fromDateTime(dateTime); // Extract TimeOfDay for display
                         });
                       }),
+                      onLocationChanged: (location) {
+                        setState(() {
+                          selfTreatLocation = location; // Update the location
+                        });
+                      },
+                      onSavePressed: () {
+                        if (selfTreatDate != null && selfTreatLocation != null && selfTreatLocation!.isNotEmpty) {
+                          _saveWellBeingReminder(
+                            "Give Yourself a Treat",
+                            selfTreatDate,
+                            selfTreatLocation,
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Please set both date/time and location before saving.")),
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -381,12 +639,11 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
 
   Widget _buildReminderTileWithDateAndContact({
     required String title,
-    TimeOfDay? time,
     DateTime? date,
     String? contact,
-    required VoidCallback onTimePressed,
-    required VoidCallback onDatePressed,
-    required ValueChanged<String> onContactChanged,
+    required VoidCallback onDateTimePressed,
+    required VoidCallback onContactPressed,
+    VoidCallback? onSavePressed,
   }) {
     return Card(
       elevation: 4,
@@ -407,39 +664,118 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  time != null ? "Time: ${time.format(context)}" : "Time: Not set",
+                  date != null
+                      ? "Date & Time: ${date.day}/${date.month}/${date.year} ${TimeOfDay.fromDateTime(date).format(context)}"
+                      : "Date & Time: Not set",
                   style: const TextStyle(color: Colors.grey),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.access_time, color: Color(0xFF66C3A7)),
-                  onPressed: onTimePressed,
+                  icon: const Icon(Icons.calendar_today, color: Color(0xFF66C3A7)),
+                  onPressed: onDateTimePressed,
                 ),
               ],
             ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF66C3A7), // Background color for the contact text
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: Text(
+                      contact ?? "No contact selected",
+                      style: TextStyle(
+                        color: Colors.white, // Text color for better contrast
+                        fontWeight: contact != null ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.contacts, color: Color(0xFF66C3A7)),
+                  onPressed: onContactPressed,
+                ),
+              ],
+            ),
+            if (onSavePressed != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: CustomPrimaryButton(
+                  label: "Save",
+                  onPressed: onSavePressed,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderTileWithDateAndLocation({
+    required String title,
+    DateTime? date,
+    String? location,
+    required VoidCallback onDateTimePressed,
+    required ValueChanged<String> onLocationChanged,
+    VoidCallback? onSavePressed,
+  }) {
+    // Use a single TextEditingController for the location field
+    final TextEditingController locationController = TextEditingController(text: location);
+
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
                   date != null
-                      ? "Date: ${date.day}/${date.month}/${date.year}"
-                      : "Date: Not set",
+                      ? "Date & Time: ${date.day}/${date.month}/${date.year} ${TimeOfDay.fromDateTime(date).format(context)}"
+                      : "Date & Time: Not set",
                   style: const TextStyle(color: Colors.grey),
                 ),
                 IconButton(
                   icon: const Icon(Icons.calendar_today, color: Color(0xFF66C3A7)),
-                  onPressed: onDatePressed,
+                  onPressed: onDateTimePressed,
                 ),
               ],
             ),
             const SizedBox(height: 10),
             TextField(
-              decoration: const InputDecoration(
-                labelText: "Contact Name",
-                border: OutlineInputBorder(),
+              controller: locationController, // Use the controller here
+              decoration: customInputDecoration(
+                labelText: 'Location',
+                hintText: 'e.g Restaurant, Park',
+                prefixIcon: const Icon(Icons.fastfood, color: Colors.green),
               ),
-              onChanged: onContactChanged,
-              controller: TextEditingController(text: contact),
+              onChanged: (value) {
+                onLocationChanged(value);
+              },
             ),
+            const SizedBox(height: 10),
+            if (onSavePressed != null)
+              Align(
+                alignment: Alignment.centerRight,
+                child: CustomPrimaryButton(
+                  label: "Save",
+                  onPressed: onSavePressed,
+                ),
+              ),
           ],
         ),
       ),

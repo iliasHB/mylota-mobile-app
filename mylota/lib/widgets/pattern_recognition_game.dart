@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
+import 'custom_button.dart';
 
 class PatternRecognitionGame extends StatefulWidget {
   const PatternRecognitionGame({Key? key}) : super(key: key);
@@ -134,10 +135,14 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
               ],
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _startNewGame,
-              child: const Text('Restart Game'),
+            Center(
+              child: CustomPrimaryButton(
+                label: 'Restart Game',
+                onPressed: _startNewGame,
+                //child: const Text('Restart Game'),
+              ),
             ),
+            
           ],
         ),
       ),

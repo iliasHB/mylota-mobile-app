@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'package:mylota/widgets/custom_button.dart';
+
 class CognitiveTasksPage extends StatefulWidget {
   const CognitiveTasksPage({Key? key}) : super(key: key);
 
@@ -12,7 +14,8 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
   final List<String> words = [
     'Dog', 'Apple', 'Hammer', 'Cat', 'Banana', 'Wrench', 'Elephant', 'Carrot',
     'Screwdriver', 'Lion', 'Orange', 'Drill', 'Tiger', 'Grapes', 'Saw',
-    'Horse', 'Peach', 'Pliers', 'Monkey', 'Strawberry'
+    'Horse', 'Peach', 'Pliers', 'Monkey', 'Strawberry','Pear', 'Shovel',
+    'Zebra', 'Watermelon', 'Axe', 'Giraffe', 'Blueberry', 'Mallet', 'Bear', 'Fox'
   ];
   final Map<String, List<String>> categories = {
     'Animals': [],
@@ -146,13 +149,16 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
             ],
           );
         }).toList(),
-        ElevatedButton(
-          onPressed: () {
-            setState(() {
-              _resetGame();
-            });
-          },
-          child: const Text('Play Again'),
+        const SizedBox(height: 20),
+        Center( // Center the button
+          child: CustomPrimaryButton(
+            label: 'Play Again',
+            onPressed: () {
+              setState(() {
+                _resetGame();
+              });
+            },
+          ),
         ),
       ],
     );

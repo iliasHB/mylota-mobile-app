@@ -1,4 +1,3 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +18,7 @@ class CustomPrimaryButton extends StatelessWidget {
     this.backgroundColor,
     this.padding = const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
     this.textStyle,
-    this.borderRadius = 10.0, required Text child,
+    this.borderRadius = 10.0,
   });
 
   @override
@@ -27,22 +26,20 @@ class CustomPrimaryButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor ?? const Color(0xFF2A7F67), // Default here
-        padding: const EdgeInsets.symmetric(vertical: 0.0),
+        backgroundColor: backgroundColor ?? const Color(0xFF2A7F67), // Default color
+        padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
-      child: Padding(
-        padding: padding,
-        child: Text(
-            label,
-            style: textStyle ?? AppStyle.cardSubtitle.copyWith(color: Colors.white, fontSize: 14)
-        ),
+      child: Text(
+        label,
+        style: textStyle ?? AppStyle.cardSubtitle.copyWith(color: Colors.white, fontSize: 14),
       ),
     );
   }
 }
+
 ///
 
 class CustomSecondaryButton extends StatelessWidget {
