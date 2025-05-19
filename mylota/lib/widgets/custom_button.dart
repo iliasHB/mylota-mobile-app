@@ -21,6 +21,8 @@ class CustomPrimaryButton extends StatelessWidget {
     this.borderRadius = 10.0,
   });
 
+  
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
@@ -141,5 +143,44 @@ class CustomContainerLoadingButton extends StatelessWidget {
   }
 }
 
+///////////////// call button //////////////////
+class CustomPrimaryButton2 extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final Color? backgroundColor;
+  final EdgeInsetsGeometry padding;
+  final TextStyle? textStyle;
+  final double borderRadius;
 
+  const CustomPrimaryButton2({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.backgroundColor,
+    this.padding = const EdgeInsets.symmetric(vertical: 8.0, horizontal: 25.0),
+    this.textStyle,
+    this.borderRadius = 10.0,
+  });
+
+  
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: backgroundColor ?? const Color(0xFF2A7F67), // Default color
+        padding: padding,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+      ),
+      child: Text(
+        label,
+        style: textStyle ?? AppStyle.cardSubtitle.copyWith(color: Colors.white, fontSize: 14),
+      ),
+    );
+  }
+}
+/////////////////////////////////////////////
 

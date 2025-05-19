@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_contact_picker/model/contact.dart';
 import 'package:mylota/utils/styles.dart';
+import 'package:mylota/widgets/box_breathing_audio_widget.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/pattern_recognition_game.dart';
 import 'package:mylota/widgets/puzzle_game.dart';
@@ -10,6 +11,8 @@ import '../widgets/mental_stimulation_widget.dart';
 import 'package:mylota/widgets/mindfulness_activities_widget.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:async';
 
 class MentalStimulationPage extends StatefulWidget {
   @override
@@ -37,10 +40,12 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   TimeOfDay? callSomeoneTime;
   DateTime? callSomeoneDate;
   String? callSomeoneContact;
+  String? callSomeonePhoneNumber; // <-- Add this variable to your state
 
   TimeOfDay? checkLoverTime;
   DateTime? checkLoverDate;
   String? checkLoverContact;
+  String? checkLoverPhoneNumber; // <-- Add this variable to your state
 
   TimeOfDay? selfTreatTime;
   DateTime? selfTreatDate;
@@ -51,7 +56,29 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   DateTime? learningJourneyDate;
   TimeOfDay? learningJourneyTime;
 
+  DateTime? learningStartDateTime;
+  DateTime? learningEndDateTime;
+
   List<String> dropdownItems = [];
+
+  // Add these progress variables
+  int puzzleProgress = 0;
+  int patternRecognitionProgress = 0;
+  int cognitiveTasksProgress = 0;
+  int focusActivityProgress = 0;
+
+  // Controller for location input (for "Give Yourself a Treat")
+  final TextEditingController _selfTreatLocationController = TextEditingController();
+
+  // Focus activity completion status
+  bool focusActivityCompleted = false;
+
+  @override
+  void dispose() {
+    _learningModuleController.dispose();
+    _selfTreatLocationController.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickDate(BuildContext context, String title, Function(DateTime) onDateSelected) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -151,15 +178,16 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     }
   }
 
-  Future<void> _saveLearningJourney(String task, DateTime date) async {
+  Future<void> _saveLearningJourney(String task, DateTime start, DateTime end) async {
     try {
       await FirebaseFirestore.instance
           .collection("Mental stimulation")
-          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .doc("hiIyyqWGzb9eR4RgAHAl")
           .collection("learning-journey")
           .add({
         "task": task,
-        "date": date.toIso8601String(),
+        "start": start.toIso8601String(),
+        "end": end.toIso8601String(),
         "timestamp": FieldValue.serverTimestamp(),
       });
 
@@ -167,11 +195,10 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
         SnackBar(content: Text("Learning task saved: $task")),
       );
 
-      // Clear the input field and reset the date/time
       _learningModuleController.clear();
       setState(() {
-        learningJourneyDate = null;
-        learningJourneyTime = null;
+        learningStartDateTime = null;
+        learningEndDateTime = null;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -200,6 +227,103 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Failed to save $title reminder: $e")),
       );
+    }
+  }
+
+  Future<void> _saveGameProgress(String gameType, int score, int maxScore) async {
+    try {
+      final progress = (maxScore > 0) ? ((score / maxScore) * 100).clamp(0, 100).toInt() : 0;
+      await FirebaseFirestore.instance
+          .collection("Mental stimulation")
+          .doc("hiIyyqWGzb9eR4RgAHAl")
+          .collection("game-progress")
+          .doc(gameType)
+          .set({
+        "score": score,
+        "progress": progress,
+        "timestamp": FieldValue.serverTimestamp(),
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("$gameType progress saved: $progress%")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to save $gameType progress: $e")),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Prompt every 10 minutes (600 seconds)
+    Timer.periodic(const Duration(minutes: 10), (timer) {
+      if (learningStartDateTime != null && learningEndDateTime != null) {
+        _showProgressPrompt();
+      }
+    });
+    _fetchGameProgress();
+  }
+
+  Future<void> _fetchGameProgress() async {
+    final docRef = FirebaseFirestore.instance
+        .collection("Mental stimulation")
+        .doc("hiIyyqWGzb9eR4RgAHAl")
+        .collection("game-progress");
+
+    final puzzle = await docRef.doc("Puzzle").get();
+    final pattern = await docRef.doc("Pattern Recognition").get();
+    final cognitive = await docRef.doc("Cognitive Tasks").get();
+
+    setState(() {
+      puzzleProgress = puzzle.data()?['progress'] ?? 0;
+      patternRecognitionProgress = pattern.data()?['progress'] ?? 0;
+      cognitiveTasksProgress = cognitive.data()?['progress'] ?? 0;
+    });
+  }
+
+  Future<void> _fetchFocusActivityProgress() async {
+    final query = await FirebaseFirestore.instance
+        .collection("Mental stimulation")
+        .doc("hiIyyqWGzb9eR4RgAHAl")
+        .collection("focus-activities-progress")
+        .where("completed", isEqualTo: true)
+        .get();
+
+    setState(() {
+      // Example: progress is number of completed activities (adjust as needed)
+      focusActivityProgress = query.docs.length * 20; // e.g., 5 activities = 100%
+      if (focusActivityProgress > 100) focusActivityProgress = 100;
+    });
+  }
+
+  void _showProgressPrompt() async {
+    double? percent = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        double tempPercent = 0;
+        return AlertDialog(
+          title: const Text("What percentage have you done?"),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(hintText: "Enter percentage (0-100)"),
+            onChanged: (value) {
+              tempPercent = double.tryParse(value) ?? 0;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(tempPercent),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+    if (percent != null && percent >= 0 && percent <= 100) {
+      setState(() {
+        learningProgress = percent.toInt();
+      });
     }
   }
 
@@ -263,17 +387,36 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          learningJourneyDate != null
-                              ? "Date & Time: ${learningJourneyDate!.day}/${learningJourneyDate!.month}/${learningJourneyDate!.year} ${learningJourneyTime?.format(context) ?? ''}"
-                              : "Date & Time: Not set",
+                          learningStartDateTime != null
+                              ? "Start: ${learningStartDateTime!.day}/${learningStartDateTime!.month}/${learningStartDateTime!.year} ${TimeOfDay.fromDateTime(learningStartDateTime!).format(context)}"
+                              : "Start: Not set",
                           style: const TextStyle(color: Colors.grey),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.calendar_today, color: Color(0xFF66C3A7)),
-                          onPressed: () => _pickDateTime(context, "Learning Journey", (dateTime) {
+                          icon: const Icon(Icons.play_arrow, color: Color(0xFF66C3A7)),
+                          onPressed: () => _pickDateTime(context, "Start Date & Time", (dateTime) {
                             setState(() {
-                              learningJourneyDate = dateTime;
-                              learningJourneyTime = TimeOfDay.fromDateTime(dateTime);
+                              learningStartDateTime = dateTime;
+                            });
+                          }),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          learningEndDateTime != null
+                              ? "End: ${learningEndDateTime!.day}/${learningEndDateTime!.month}/${learningEndDateTime!.year} ${TimeOfDay.fromDateTime(learningEndDateTime!).format(context)}"
+                              : "End: Not set",
+                          style: const TextStyle(color: Colors.grey),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.stop, color: Color(0xFF66C3A7)),
+                          onPressed: () => _pickDateTime(context, "End Date & Time", (dateTime) {
+                            setState(() {
+                              learningEndDateTime = dateTime;
                             });
                           }),
                         ),
@@ -283,15 +426,20 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                     CustomPrimaryButton(
                       label: "Save Learning Task",
                       onPressed: () {
-                        if (_learningModuleController.text.isNotEmpty && learningJourneyDate != null) {
-                          _saveLearningJourney(_learningModuleController.text, learningJourneyDate!);
+                        if (_learningModuleController.text.isNotEmpty &&
+                            learningStartDateTime != null &&
+                            learningEndDateTime != null) {
+                          _saveLearningJourney(
+                            _learningModuleController.text,
+                            learningStartDateTime!,
+                            learningEndDateTime!,
+                          );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please enter a task and set a date/time.")),
+                            const SnackBar(content: Text("Please enter a task and set start/end date/time.")),
                           );
                         }
                       },
-                      //child: const Text("Save Learning Task"),
                     ),
                   ],
                 ),
@@ -395,6 +543,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                       onChanged: (value) {
                         setState(() {
                           selectedFocusActivity = value;
+                          focusActivityCompleted = false;
                         });
                       },
                       decoration: customInputDecoration(
@@ -407,14 +556,36 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                    
                     const SizedBox(height: 20),
                     if (selectedFocusActivity != null)
-                      MindfulnessActivitiesWidget(activity: selectedFocusActivity!),
+                      selectedFocusActivity == 'Box Breathing'
+                          ? BoxBreathingAudioWidget()
+                          : MindfulnessActivitiesWidget(activity: selectedFocusActivity!),
                     const SizedBox(height: 10),
-                    if (selectedFocusActivity != null)
+                    if (selectedFocusActivity != null && !focusActivityCompleted)
                       ElevatedButton(
-                        onPressed: () {
-                          _saveFocusActivity(selectedFocusActivity!);
+                        onPressed: () async {
+                          // Save completion to Firestore
+                          await FirebaseFirestore.instance
+                              .collection("Mental stimulation")
+                              .doc("hiIyyqWGzb9eR4RgAHAl")
+                              .collection("focus-activities-progress")
+                              .add({
+                            "activity": selectedFocusActivity,
+                            "completed": true,
+                            "timestamp": FieldValue.serverTimestamp(),
+                          });
+
+                          setState(() {
+                            focusActivityCompleted = true;
+                          });
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Activity marked as done!")),
+                          );
+
+                          // Optionally, update progress bar or fetch progress again
+                          _fetchFocusActivityProgress();
                         },
-                        child: const Text("Save Focus Activity"),
+                        child: const Text("Done"),
                       ),
                   ],
                 ),
@@ -428,24 +599,26 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Learning Progress:'),
-                    LinearProgressIndicator(value: learningProgress / 100),
-                    const Text('Puzzle Score:'),
-                    LinearProgressIndicator(value: puzzleScore / 100),
+                    const Text('Puzzle Progress:'),
+                    LinearProgressIndicator(value: puzzleProgress / 100),
                     const SizedBox(height: 10),
-                    const Text('Cognitive Tasks Score:'),
-                    LinearProgressIndicator(value: cognitiveScore / 100),
+                    const Text('Pattern Recognition Progress:'),
+                    LinearProgressIndicator(value: patternRecognitionProgress / 100),
                     const SizedBox(height: 10),
-                    const Text('Meditation Minutes:'),
-                    LinearProgressIndicator(value: meditationMinutes / 60),
+                    const Text('Cognitive Tasks Progress:'),
+                    LinearProgressIndicator(value: cognitiveTasksProgress / 100),
+                    const SizedBox(height: 10),
+                    const Text('Focus Activity Progress:'),
+                    LinearProgressIndicator(value: focusActivityProgress / 100),
                     const SizedBox(height: 10),
                     
                     // Save game scores
                     ElevatedButton(
                       onPressed: () {
-                        _saveGameScore("Puzzle", puzzleScore);
-                        _saveGameScore("Pattern Recognition", patternRecognitionScore);
-                        _saveGameScore("Cognitive Tasks", cognitiveScore);
+                        _saveGameProgress("Puzzle", puzzleScore, 100);
+                        _saveGameProgress("Pattern Recognition", patternRecognitionScore, 100);
+                        _saveGameProgress("Cognitive Tasks", cognitiveScore, 100);
+                        _fetchGameProgress(); // Refresh after saving
                       },
                       child: const Text("Save Scores"),
                     ),
@@ -455,7 +628,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
               const SizedBox(height: 20),
 
               _buildSection(
-                title: 'Well-being Reminders',
+                title: 'Wellbeing Reminders',
                 subtitle: 'Take care of yourself with these friendly reminders:',
                 icon: const Icon(Icons.favorite),
                 child: Column(
@@ -464,6 +637,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                       title: "Call Someone (Family/Friend)",
                       date: callSomeoneDate,
                       contact: callSomeoneContact,
+                      phoneNumber: callSomeonePhoneNumber,
                       onDateTimePressed: () => _pickDateTime(context, "Call Someone", (dateTime) {
                         setState(() {
                           callSomeoneDate = dateTime; // Store the combined DateTime
@@ -474,9 +648,39 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                         final FlutterNativeContactPicker contactPicker = FlutterNativeContactPicker();
                         try {
                           final Contact? contact = await contactPicker.selectContact();
-                          setState(() {
-                            callSomeoneContact = contact?.fullName ?? "Unknown Contact";
-                          });
+                          if (contact != null) {
+                            if (contact.phoneNumbers != null && contact.phoneNumbers!.length > 1) {
+                              // If multiple numbers, let user pick one
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return ListView(
+                                    shrinkWrap: true,
+                                    children: contact.phoneNumbers!
+                                        .map((number) => ListTile(
+                                              title: Text(number),
+                                              onTap: () {
+                                                setState(() {
+                                                  callSomeoneContact = contact.fullName ?? "Unknown Contact";
+                                                  callSomeonePhoneNumber = number; // or contact.phoneNumbers!.first
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                            ))
+                                        .toList(),
+                                  );
+                                },
+                              );
+                            } else {
+                              // Only one or no number
+                              setState(() {
+                                callSomeoneContact = contact.fullName ?? "Unknown Contact";
+                                callSomeonePhoneNumber = contact.phoneNumbers?.isNotEmpty == true
+                                    ? contact.phoneNumbers!.first
+                                    : "";
+                              });
+                            }
+                          }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Failed to pick contact: $e")),
@@ -501,6 +705,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                       title: "Check on Spouse / Partner",
                       date: checkLoverDate,
                       contact: checkLoverContact,
+                      phoneNumber: checkLoverPhoneNumber, // <-- Pass the selected number here
                       onDateTimePressed: () => _pickDateTime(context, "Check on Spouse / Partner", (dateTime) {
                         setState(() {
                           checkLoverDate = dateTime; // Store the combined DateTime
@@ -511,9 +716,37 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                         final FlutterNativeContactPicker contactPicker = FlutterNativeContactPicker();
                         try {
                           final Contact? contact = await contactPicker.selectContact();
-                          setState(() {
-                            checkLoverContact = contact?.fullName ?? "Unknown Contact";
-                          });
+                          if (contact != null) {
+                            if (contact.phoneNumbers != null && contact.phoneNumbers!.length > 1) {
+                              showModalBottomSheet(
+                                context: context,
+                                builder: (context) {
+                                  return ListView(
+                                    shrinkWrap: true,
+                                    children: contact.phoneNumbers!
+                                        .map((number) => ListTile(
+                                              title: Text(number),
+                                              onTap: () {
+                                                setState(() {
+                                                  checkLoverContact = contact.fullName ?? "Unknown Contact";
+                                                  checkLoverPhoneNumber = number;
+                                                });
+                                                Navigator.pop(context);
+                                              },
+                                            ))
+                                        .toList(),
+                                  );
+                                },
+                              );
+                            } else {
+                              setState(() {
+                                checkLoverContact = contact.fullName ?? "Unknown Contact";
+                                checkLoverPhoneNumber = contact.phoneNumbers?.isNotEmpty == true
+                                    ? contact.phoneNumbers!.first
+                                    : "";
+                              });
+                            }
+                          }
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text("Failed to pick contact: $e")),
@@ -641,6 +874,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     required String title,
     DateTime? date,
     String? contact,
+    String? phoneNumber, // <-- Add this parameter
     required VoidCallback onDateTimePressed,
     required VoidCallback onContactPressed,
     VoidCallback? onSavePressed,
@@ -682,13 +916,13 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
                     decoration: BoxDecoration(
-                      color: Color(0xFF66C3A7), // Background color for the contact text
+                      color: Color(0xFF66C3A7),
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: Text(
                       contact ?? "No contact selected",
                       style: TextStyle(
-                        color: Colors.white, // Text color for better contrast
+                        color: Colors.white,
                         fontWeight: contact != null ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
@@ -697,6 +931,25 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 IconButton(
                   icon: const Icon(Icons.contacts, color: Color(0xFF66C3A7)),
                   onPressed: onContactPressed,
+                ),
+                // Call button
+                IconButton(
+                  icon: const Icon(Icons.call, color: Colors.green),
+                  onPressed: (phoneNumber != null && phoneNumber.isNotEmpty)
+                      ? () async {
+                          final cleanedNumber = phoneNumber.replaceAll(RegExp(r'\s+'), '');
+                          print('Calling number: $cleanedNumber');
+                          final Uri callUri = Uri(scheme: 'tel', path: cleanedNumber);
+                          if (await canLaunchUrl(callUri)) {
+                            await launchUrl(callUri);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Could not launch phone call")),
+                            );
+                          }
+                        }
+                      : null,
+                  tooltip: 'Call',
                 ),
               ],
             ),
@@ -722,8 +975,13 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     required ValueChanged<String> onLocationChanged,
     VoidCallback? onSavePressed,
   }) {
-    // Use a single TextEditingController for the location field
-    final TextEditingController locationController = TextEditingController(text: location);
+    // Only update the controller's text if the location changes
+    if (_selfTreatLocationController.text != (location ?? "")) {
+      _selfTreatLocationController.text = location ?? "";
+      _selfTreatLocationController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _selfTreatLocationController.text.length),
+      );
+    }
 
     return Card(
       elevation: 4,
@@ -757,7 +1015,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
             ),
             const SizedBox(height: 10),
             TextField(
-              controller: locationController, // Use the controller here
+              controller: _selfTreatLocationController,
               decoration: customInputDecoration(
                 labelText: 'Location',
                 hintText: 'e.g Restaurant, Park',
