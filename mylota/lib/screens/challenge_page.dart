@@ -2,18 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/custom_input_decorator.dart';
 import 'dart:math';
-import 'package:url_launcher/url_launcher.dart'; // Import url_launcher for email
-
-// Sample data (To-Do List for the week)
-final Map<String, List<String>> weeklyTasks = {
-  "Monday": ["Exercise", "Read a book", "Work on project"],
-  "Tuesday": ["Buy groceries", "Write a report", "Call Mom"],
-  "Wednesday": ["Attend meeting", "Code review", "Cook dinner"],
-  "Thursday": ["Go to gym", "Watch a documentary", "Plan weekend"],
-  "Friday": ["Finish assignment", "Team discussion", "Relax"],
-  "Saturday": ["Go hiking", "Visit friends", "Watch movie"],
-  "Sunday": ["Attend church", "Meal prep", "Family time"]
-};
+import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ChallengePage extends StatefulWidget {
   @override
@@ -26,21 +16,55 @@ class _ChallengePageState extends State<ChallengePage> {
   int score = 0;
   int patternLevel = 1;
 
-  // Function to send email when "Need Help?" button is clicked
-  void _sendEmail() async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'mylota138@gmail.com',
-      queryParameters: {'subject': 'Customer Support Inquiry'},
-    );
+  // Move these inside the state class
+  Map<String, List<String>> weeklyTasks = {};
+  bool isLoadingTasks = true;
 
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+  String? selectedDay;
+  String? selectedTask;
+  Map<String, int> rememberedPerDay = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWeeklyTasks();
+  }
+
+  Future<void> _fetchWeeklyTasks() async {
+    setState(() {
+      isLoadingTasks = true;
+    });
+    final doc = await FirebaseFirestore.instance
+        .collection('to-do-lists')
+        .doc('weekly') // Adjust this to your Firestore structure
+        .get();
+    if (doc.exists) {
+      final data = doc.data()!;
+      setState(() {
+        weeklyTasks = data.map((key, value) =>
+            MapEntry(key, List<String>.from(value as List)));
+        isLoadingTasks = false;
+      });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open email client.")),
-      );
+      setState(() {
+        isLoadingTasks = false;
+      });
     }
+  }
+
+  // Add these variables for dropdowns and progress
+  // Helper to get tasks for the selected day
+  List<String> get dayTasks {
+    if (selectedDay == null) return [];
+    return weeklyTasks[selectedDay!] ?? [];
+  }
+
+  // Calculate progress as percentage of all tasks remembered
+  int get progressPercent {
+    final total = weeklyTasks.values.fold<int>(0, (sum, list) => sum + list.length);
+    final remembered = rememberedPerDay.values.fold<int>(0, (sum, val) => sum + val);
+    if (total == 0) return 0;
+    return ((remembered / total) * 100).round();
   }
 
   @override
@@ -68,7 +92,7 @@ class _ChallengePageState extends State<ChallengePage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)], // Gradient
+            colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
           ),
         ),
         child: Column(
@@ -79,8 +103,6 @@ class _ChallengePageState extends State<ChallengePage> {
                 children: [
                   _buildMemoryTest(),
                   const SizedBox(height: 20),
-                 // _buildPatternGame(),
-                  const SizedBox(height: 20),
                   _buildLeaderboard(),
                 ],
               ),
@@ -88,19 +110,20 @@ class _ChallengePageState extends State<ChallengePage> {
           ],
         ),
       ),
-
-      // Floating "Need Help?" Button
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _sendEmail,
         label: const Text("Need Help?"),
         icon: const Icon(Icons.help_outline),
-        backgroundColor: const Color(0xFF66C3A7), // Matches theme color
+        backgroundColor: const Color(0xFF66C3A7),
       ),
     );
   }
 
   // Memory Test Section
   Widget _buildMemoryTest() {
+    if (isLoadingTasks) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Card(
       color: Colors.white.withOpacity(0.9),
       child: Padding(
@@ -111,19 +134,54 @@ class _ChallengePageState extends State<ChallengePage> {
               "Remember Your Weekly Tasks",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            TextField(
-              controller: _taskController,
-             // decoration: const InputDecoration(labelText: "Enter a remembered task"),
+            DropdownButtonFormField<String>(
+              value: selectedDay,
+              items: weeklyTasks.keys.map((day) {
+                return DropdownMenuItem(
+                  value: day,
+                  child: Text(day),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedDay = value;
+                  selectedTask = null;
+                });
+              },
               decoration: customInputDecoration(
-                    labelText: 'Enter a remembered task',
-                    hintText: 'e.g remember To-do task',
-                    prefixIcon: const Icon(Icons.bookmark, color: Colors.green),        
-            ),),
+                labelText: 'Select Day',
+                hintText: 'Choose a day of the week',
+                prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+              ),
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: selectedTask,
+              items: (selectedDay != null && weeklyTasks[selectedDay!] != null)
+                  ? weeklyTasks[selectedDay!]!.map((task) {
+                      return DropdownMenuItem(
+                        value: task,
+                        child: Text(task),
+                      );
+                    }).toList()
+                  : [],
+              onChanged: (value) {
+                setState(() {
+                  selectedTask = value;
+                });
+              },
+              decoration: customInputDecoration(
+                labelText: 'Select Task',
+                hintText: 'Choose a task to remember',
+                prefixIcon: const Icon(Icons.bookmark, color: Colors.green),
+              ),
+            ),
             const SizedBox(height: 10),
             CustomPrimaryButton(
               label: "Submit Task",
-              onPressed: _checkTask,
-              //child: const Text("Submit Task"),
+              onPressed: (selectedDay != null && selectedTask != null)
+                  ? _checkTask
+                  : () {},
             ),
             Text(
               "Score: $score / ${weeklyTasks.values.expand((x) => x).length}",
@@ -136,133 +194,81 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   void _checkTask() {
-    String userTask = _taskController.text.trim();
-    bool correct = weeklyTasks.values.any((tasks) => tasks.contains(userTask));
+    if (selectedDay == null || selectedTask == null) return;
+    bool correct = weeklyTasks[selectedDay!]!.contains(selectedTask!);
     setState(() {
-      if (correct && !userAnswers.contains(userTask)) {
-        userAnswers.add(userTask);
+      if (correct && !(userAnswers.contains("$selectedDay:$selectedTask"))) {
+        userAnswers.add("$selectedDay:$selectedTask");
         score++;
+        rememberedPerDay[selectedDay!] = (rememberedPerDay[selectedDay!] ?? 0) + 1;
+        _showTrophyDialog();
+      } else if (!correct) {
+        _showTryAgainDialog();
       }
+      selectedTask = null;
     });
-    _taskController.clear();
   }
 
-  // Pattern Recognition Game Section
-  /* Widget _buildPatternGame() {
+  void _showTrophyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("🎉 Congratulations!"),
+        content: const Text("You remembered the correct task!"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showTryAgainDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Try Again"),
+        content: const Text("That task does not match today's to-do list."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Leaderboard Section
+  Widget _buildLeaderboard() {
     return Card(
-      color: Colors.white.withOpacity(0.9),
+      color: const Color(0xFF2A7F67),
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             const Text(
-              "Pattern Recognition Game",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text("Level: $patternLevel"),
-            ElevatedButton(
-              onPressed: _generatePattern,
-              child: const Text("Play Game"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
- */
-  /* void _generatePattern() {
-    List<int> pattern = List.generate(patternLevel + 2, (index) => Random().nextInt(9));
-    List<int> userPattern = List.from(pattern);
-    userPattern.shuffle();
-
-    // List of colors for the pattern game buttons
-    List<Color> colors = [
-      Colors.red, Colors.blue, Colors.green, Colors.orange, Colors.purple,
-      Colors.teal, Colors.pink, Colors.brown, Colors.amber
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Pattern Recognition"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Memorize this pattern: ${pattern.join(', ')}",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              const Text("Select the correct pattern in order"),
-              const SizedBox(height: 10),
-
-              Wrap(
-                spacing: 8.0,
-                children: userPattern.map((num) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      if (userPattern.join(',') == pattern.join(',')) {
-                        setState(() {
-                          patternLevel++;
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Correct! Level Up! 🎉"))
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Wrong Pattern. Try Again! ❌"))
-                        );
-                      }
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colors[num % colors.length], // Assign color based on number
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    child: Text(
-                      "$num",
-                      style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  } */
-
-  // Leaderboard Section
-  Widget _buildLeaderboard() {
-    return Card(
-      color: const Color(0xFF2A7F67), // Green color for the card
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: const Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
               "Leaderboard",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             ListTile(
-              leading: Icon(Icons.emoji_events, color: Colors.amber),
-              title: Text(
-                "User123",
+              leading: const Icon(Icons.emoji_events, color: Colors.amber),
+              title: const Text(
+                "You",
                 style: TextStyle(color: Colors.white),
               ),
               trailing: Text(
-                "Score: 45",
-                style: TextStyle(color: Colors.white),
+                "Progress: $progressPercent%",
+                style: const TextStyle(color: Colors.white),
               ),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.emoji_events, color: Colors.grey),
               title: Text(
                 "User456",
@@ -273,7 +279,7 @@ class _ChallengePageState extends State<ChallengePage> {
                 style: TextStyle(color: Colors.white),
               ),
             ),
-            ListTile(
+            const ListTile(
               leading: Icon(Icons.emoji_events, color: Colors.brown),
               title: Text(
                 "User789",
@@ -288,5 +294,20 @@ class _ChallengePageState extends State<ChallengePage> {
         ),
       ),
     );
+  }
+
+  void _sendEmail() async {
+    final Uri emailLaunchUri = Uri(
+      scheme: 'mailto',
+      path: 'mylota138@yahoo.com',
+      query: Uri.encodeFull('subject=Weekly Challenge Feedback&body=Hello,'),
+    );
+    if (await canLaunchUrl(emailLaunchUri)) {
+      await launchUrl(emailLaunchUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Could not open email app")),
+      );
+    }
   }
 }
