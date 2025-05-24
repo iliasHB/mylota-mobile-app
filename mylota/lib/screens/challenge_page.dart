@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mylota/widgets/custom_button.dart';
+import 'package:mylota/widgets/custom_input_decorator.dart';
 import 'dart:math';
 import 'package:url_launcher/url_launcher.dart'; // Import url_launcher for email
 
@@ -77,7 +79,7 @@ class _ChallengePageState extends State<ChallengePage> {
                 children: [
                   _buildMemoryTest(),
                   const SizedBox(height: 20),
-                  _buildPatternGame(),
+                 // _buildPatternGame(),
                   const SizedBox(height: 20),
                   _buildLeaderboard(),
                 ],
@@ -111,12 +113,17 @@ class _ChallengePageState extends State<ChallengePage> {
             ),
             TextField(
               controller: _taskController,
-              decoration: const InputDecoration(labelText: "Enter a remembered task"),
-            ),
+             // decoration: const InputDecoration(labelText: "Enter a remembered task"),
+              decoration: customInputDecoration(
+                    labelText: 'Enter a remembered task',
+                    hintText: 'e.g remember To-do task',
+                    prefixIcon: const Icon(Icons.bookmark, color: Colors.green),        
+            ),),
             const SizedBox(height: 10),
-            ElevatedButton(
+            CustomPrimaryButton(
+              label: "Submit Task",
               onPressed: _checkTask,
-              child: const Text("Submit Task"),
+              //child: const Text("Submit Task"),
             ),
             Text(
               "Score: $score / ${weeklyTasks.values.expand((x) => x).length}",
@@ -141,7 +148,7 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   // Pattern Recognition Game Section
-  Widget _buildPatternGame() {
+  /* Widget _buildPatternGame() {
     return Card(
       color: Colors.white.withOpacity(0.9),
       child: Padding(
@@ -162,8 +169,8 @@ class _ChallengePageState extends State<ChallengePage> {
       ),
     );
   }
-
-  void _generatePattern() {
+ */
+  /* void _generatePattern() {
     List<int> pattern = List.generate(patternLevel + 2, (index) => Random().nextInt(9));
     List<int> userPattern = List.from(pattern);
     userPattern.shuffle();
@@ -226,34 +233,56 @@ class _ChallengePageState extends State<ChallengePage> {
         );
       },
     );
-  }
+  } */
 
   // Leaderboard Section
   Widget _buildLeaderboard() {
     return Card(
-      color: Colors.white.withOpacity(0.9),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
+      color: const Color(0xFF2A7F67), // Green color for the card
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text(
+            Text(
               "Leaderboard",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             ListTile(
-              leading: const Icon(Icons.emoji_events, color: Colors.amber),
-              title: const Text("User123"),
-              trailing: const Text("Score: 45"),
+              leading: Icon(Icons.emoji_events, color: Colors.amber),
+              title: Text(
+                "User123",
+                style: TextStyle(color: Colors.white),
+              ),
+              trailing: Text(
+                "Score: 45",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             ListTile(
-              leading: const Icon(Icons.emoji_events, color: Colors.grey),
-              title: const Text("User456"),
-              trailing: const Text("Score: 40"),
+              leading: Icon(Icons.emoji_events, color: Colors.grey),
+              title: Text(
+                "User456",
+                style: TextStyle(color: Colors.white),
+              ),
+              trailing: Text(
+                "Score: 40",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
             ListTile(
-              leading: const Icon(Icons.emoji_events, color: Colors.brown),
-              title: const Text("User789"),
-              trailing: const Text("Score: 38"),
+              leading: Icon(Icons.emoji_events, color: Colors.brown),
+              title: Text(
+                "User789",
+                style: TextStyle(color: Colors.white),
+              ),
+              trailing: Text(
+                "Score: 38",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),

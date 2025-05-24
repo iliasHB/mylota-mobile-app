@@ -89,14 +89,20 @@ class _RegisterPageState extends State<RegisterPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png', // Path to your logo
-                      width: 60,
-                      height: 60,
+                    Flexible(
+                      child: Image.asset(
+                        'assets/images/logo.png', // Path to your logo
+                        width: 60,
+                        height: 60,
+                      ),
                     ),
-                    Text(
-                      'MyLota',
-                      style: AppStyle.cardTitle,
+                    const SizedBox(width: 10), // Add spacing between the logo and text
+                    Flexible(
+                      child: Text(
+                        'MyLota',
+                        style: AppStyle.cardTitle,
+                        overflow: TextOverflow.ellipsis, // Prevent text overflow
+                      ),
                     ),
                   ],
                 ),
@@ -277,7 +283,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         }
                         register();
                       }
-                    }),
+                    }, ),
                 const SizedBox(height: 20),
 
                 // Back to Login Button

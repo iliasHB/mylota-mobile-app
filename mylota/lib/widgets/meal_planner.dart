@@ -43,14 +43,15 @@ class _MealPlannerState extends State<MealPlanner> {
     try {
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
           .collection("user-inputs")
-          .doc("yQtkG0iE0dA0tcrQ8RAW") // Change this to your document ID
+          .doc("yQtkG0iE0dA0tcrQ8RAW") // Replace with your document ID
           .get();
 
       if (docSnapshot.exists) {
-        List<dynamic> data = docSnapshot["vegetable1"];
+        List<dynamic> data = docSnapshot["vegetable1"] ?? [];
+        List<dynamic> data2 = docSnapshot["vegatable-2"] ?? [];
         setState(() {
           dropdownItems = List<String>.from(data);
-          dropdownItemsVeg2 = List<String>.from(data);
+          dropdownItemsVeg2 = List<String>.from(data2);
           if (dropdownItems.isNotEmpty) {
             selectedItem = dropdownItems.first; // Default selection
           }
@@ -58,101 +59,13 @@ class _MealPlannerState extends State<MealPlanner> {
             selectedItem2 = dropdownItemsVeg2.first; // Default selection
           }
         });
+      } else {
+        print("Document does not exist.");
       }
     } catch (e) {
       print("Error fetching dropdown data: $e");
     }
   }
-
-  // Future<void> _saveMeals() async {
-  //   if (_mealController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Meal name cannot be empty!'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //     return;
-  //   }
-  //
-  //   try {
-  //     // Get current user ID
-  //     User? user = FirebaseAuth.instance.currentUser;
-  //     if (user == null) {
-  //       print("User not logged in!");
-  //       return;
-  //     }
-  //
-  //     // Firestore document reference
-  //     DocumentReference userDoc = FirebaseFirestore.instance
-  //         .collection('meal-planner')
-  //         .doc(user.uid);
-  //
-  //     // Fetch existing meals data
-  //     DocumentSnapshot docSnapshot = await userDoc.get();
-  //     Map<String, dynamic> mealData = {};
-  //
-  //     if (docSnapshot.exists && docSnapshot.data() != null) {
-  //       mealData = docSnapshot.data() as Map<String, dynamic>;
-  //     }
-  //
-  //     // Ensure categories exist in Firestore
-  //     Map<String, dynamic> mealsByCategory = mealData[_selectedDayCategory] ?? {};
-  //     String timeString = '${_mealTime!.hour}:${_mealTime!.minute}';
-  //
-  //     // Create new meal object
-  //     Map<String, dynamic> newMeal = {
-  //       'meal-time': timeString,//_mealTime,
-  //       'name': _mealController.text,
-  //       'vegetable1': selectedItem,
-  //       'vegetable2': selectedItem2,
-  //       'createdAt': DateTime.now().toIso8601String(),
-  //     };
-  //
-  //     // Check if category exists and update or add a meal
-  //     if (mealsByCategory.containsKey(_selectedDayCategory) && mealsByCategory.containsKey(_selectedCategory)) {
-  //       print('category is: ${_selectedDayCategory}');
-  //       print('category is: ${_selectedCategory}');
-  //       // Update existing category (append new meal)
-  //       mealsByCategory[_selectedCategory].add(newMeal);
-  //     } else {
-  //       // Create new category and add meal
-  //       mealsByCategory[_selectedCategory] = [newMeal];
-  //     }
-  //
-  //     // Save updated data back to Firestore
-  //     await userDoc.set({_selectedDayCategory: mealsByCategory});
-  //
-  //     // Save to SharedPreferences for local storage
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     // await prefs.setString('savedMeals', jsonEncode(mealsByCategory));
-  //
-  //     // Reset input fields
-  //     setState(() {
-  //       _mealController.clear();
-  //       selectedItem = dropdownItems.isNotEmpty ? dropdownItems.first : null;
-  //       selectedItem2 = dropdownItemsVeg2.isNotEmpty ? dropdownItemsVeg2.first : null;
-  //     });
-  //
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Meal saved successfully!'),
-  //         backgroundColor: Colors.green,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     print("Error saving meal: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Failed to save meal. Please try again.'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   }
-  // }
 
   TimeOfDay? _mealTime;
 
@@ -285,34 +198,40 @@ class _MealPlannerState extends State<MealPlanner> {
             // Vegetable color dropdown 1
 
             DropdownButtonFormField<String>(
-                value: selectedItem,
-                items: dropdownItems.map<DropdownMenuItem<String>>((category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(
-                      category,
-                      style: AppStyle.cardfooter.copyWith(fontSize: 12),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    selectedItem = value!;
-                  });
-                },
-                decoration: customInputDecoration(
-                  labelText: 'Select vegetable 1',
-                  hintText: 'Choose second veges',
-                  prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
-                )),
+              value: selectedItem,
+              items: dropdownItems.isNotEmpty
+                  ? dropdownItems.map<DropdownMenuItem<String>>((category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(
+                          category,
+                          style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                        ),
+                      );
+                    }).toList()
+                  : null,
+              onChanged: dropdownItems.isNotEmpty
+                  ? (value) {
+                      setState(() {
+                        selectedItem = value!;
+                      });
+                    }
+                  : null,
+              decoration: customInputDecoration(
+                labelText: 'Select vegetable 1',
+                hintText: dropdownItems.isNotEmpty
+                    ? 'Choose first veges'
+                    : 'No options available',
+                prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
+              ),
+            ),
 
             const SizedBox(height: 10),
 
             // Category dropdown
             DropdownButtonFormField<String>(
                 value: selectedItem2,
-                items:
-                    dropdownItemsVeg2.map<DropdownMenuItem<String>>((category) {
+                items: dropdownItemsVeg2.map<DropdownMenuItem<String>>((category) {
                   return DropdownMenuItem<String>(
                     value: category,
                     child: Text(
@@ -343,7 +262,7 @@ class _MealPlannerState extends State<MealPlanner> {
                           if (_formKey.currentState?.validate() ?? false) {
                             _saveMeals();
                           }
-                        })),
+                        }, )),
             const SizedBox(height: 20),
           ],
         ),
@@ -364,204 +283,4 @@ class _MealPlannerState extends State<MealPlanner> {
         onStopLoading: _stopLoading
     );
   }
-
-  // Future<void> _saveMeals() async {
-  //   if (_mealController.text.isEmpty) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Meal name cannot be empty!'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //     return;
-  //   }
-  //
-  //   try {
-  //     User? user = FirebaseAuth.instance.currentUser;
-  //     if (user == null) {
-  //       print("User not logged in!");
-  //       return;
-  //     }
-  //
-  //     DocumentReference userDoc = FirebaseFirestore.instance
-  //         .collection('meal-planner')
-  //         .doc(user.uid);
-  //
-  //     DocumentSnapshot docSnapshot = await userDoc.get();
-  //     Map<String, dynamic> mealData = {};
-  //
-  //     if (docSnapshot.exists && docSnapshot.data() != null) {
-  //       mealData = docSnapshot.data() as Map<String, dynamic>;
-  //     }
-  //
-  //     Map<String, dynamic> mealsByDay = mealData[_selectedDayCategory] ?? {};
-  //     List<dynamic> mealList = mealsByDay[_selectedCategory] ?? [];
-  //
-  //     if(!mealList.isEmpty){
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(
-  //           content: Text('Meal already exist'),
-  //           backgroundColor: Colors.black,
-  //           duration: Duration(seconds: 2),
-  //         ),
-  //       );
-  //       return;
-  //     }
-  //
-  //     String timeString = '${_mealTime!.hour}:${_mealTime!.minute}';
-  //
-  //     Map<String, dynamic> newMeal = {
-  //       'meal-time': timeString,
-  //       'name': _mealController.text,
-  //       'vegetable1': selectedItem,
-  //       'vegetable2': selectedItem2,
-  //       'createdAt': DateTime.now().toIso8601String(),
-  //     };
-  //
-  //     // Check if a similar meal already exists (by name or meal-time)
-  //     // int existingIndex = mealList.indexWhere((meal) =>
-  //     // meal['name'] == newMeal['name'] &&
-  //     //     meal['meal-time'] == newMeal['meal-time']);
-  //     // // meal['name'] == newMeal['name'] &&
-  //     // //     meal['meal-time'] == newMeal['meal-time']);
-  //     //
-  //     // if (existingIndex != -1) {
-  //     //   // Update the existing meal
-  //     //   // mealList[existingIndex] = newMeal;
-  //     //   print("Meal updated.");
-  //     // } else {
-  //     //   // Add new meal
-  //     //   mealList.add(newMeal);
-  //     //   print("Meal added.");
-  //     // }
-  //
-  //     // Assign updated meal list back
-  //     mealsByDay[_selectedCategory] = mealList;
-  //     mealData[_selectedDayCategory] = mealsByDay;
-  //
-  //     await userDoc.set(mealData, SetOptions(merge: true));
-  //
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     // await prefs.setString('savedMeals', jsonEncode(mealsByDay));
-  //
-  //     setState(() {
-  //       _mealController.clear();
-  //       selectedItem = dropdownItems.isNotEmpty ? dropdownItems.first : null;
-  //       selectedItem2 = dropdownItemsVeg2.isNotEmpty ? dropdownItemsVeg2.first : null;
-  //     });
-  //
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Meal saved successfully!'),
-  //         backgroundColor: Colors.green,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   } catch (e) {
-  //     print("Error saving meal: $e");
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Failed to save meal. Please try again.'),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 2),
-  //       ),
-  //     );
-  //   }
-  // }
 }
-
-// // Add a new meal with vegetable validation
-// void _addMeal() {
-//   if (_mealController.text.isNotEmpty &&
-//       _selectedVegetable1 != null &&
-//       _selectedVegetable2 != null &&
-//       _selectedVegetable1 != _selectedVegetable2) {
-//     setState(() {
-//       meals[_selectedCategory]?.add(
-//           '${_mealController.text} (with $_selectedVegetable1 and $_selectedVegetable2)');
-//       _mealController.clear();
-//       _selectedVegetable1 = null;
-//       _selectedVegetable2 = null;
-//       _saveMeals();
-//     });
-//
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(
-//         content: Text('Meal added successfully!'),
-//         backgroundColor: Colors.green,
-//         duration: Duration(seconds: 2),
-//       ),
-//     );
-//   } else {
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       const SnackBar(
-//         content:
-//             Text('Please include at least 2 different colors of vegetables.'),
-//         backgroundColor: Colors.red,
-//         duration: Duration(seconds: 2),
-//       ),
-//     );
-//   }
-// }
-///
-
-// // Remove a meal from the list
-// void _removeMeal(String category, int index) {
-//   setState(() {
-//     meals[category]?.removeAt(index);
-//     _saveMeals();
-//   });
-// }
-///
-
-// // Meal list with delete option
-// meals.isEmpty
-//     ? const Center(
-//   child: Text(
-//     'No meals planned yet. Add one!',
-//     style: TextStyle(color: Colors.grey),
-//   ),
-// )
-//     : ListView(
-//   shrinkWrap: true,
-//   physics: const NeverScrollableScrollPhysics(),
-//   children: meals.entries.map((entry) {
-//     String category = entry.key;
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         Text(
-//           category,
-//           style: const TextStyle(
-//             fontSize: 16,
-//             fontWeight: FontWeight.bold,
-//             color: Colors.black,
-//           ),
-//         ),
-//         const SizedBox(height: 10),
-// ListView.builder(
-//   shrinkWrap: true,
-//   physics: const NeverScrollableScrollPhysics(),
-//   itemCount: entry.value.length,
-//   itemBuilder: (context, index) {
-//     return Card(
-//       margin: const EdgeInsets.symmetric(vertical: 5),
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//       child: ListTile(
-//         title: Text(entry.value[index]),
-//         trailing: IconButton(
-//           icon: const Icon(Icons.delete, color: Colors.red),
-//           onPressed: () =>
-//               _removeMeal(category, index),
-//         ),
-//       ),
-//     );
-//   },
-// ),
-//     ],
-//   );
-// }).toList(),
-// ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../utils/styles.dart';
 import 'custom_button.dart';
@@ -14,13 +15,39 @@ class MentalStimulationWidget extends StatefulWidget {
 class _MentalStimulationWidgetState extends State<MentalStimulationWidget> {
   final TextEditingController _taskController = TextEditingController();
 
-  void _checkTask() {
+  // Method to push the task to Firebase
+  Future<void> _checkTask() async {
     String task = _taskController.text.trim();
     if (task.isNotEmpty) {
+      try {
+        // Push the task to Firestore
+        await FirebaseFirestore.instance
+            .collection("Mental stimulation") // Firestore collection
+            .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+            .collection("learning-tasks") // Sub-collection for tasks
+            .add({
+          "task": task,
+          "timestamp": FieldValue.serverTimestamp(), // Add a timestamp
+        });
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Task Added: $task")),
+        );
+
+        // Clear the input field
+        _taskController.clear();
+      } catch (e) {
+        // Handle errors
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to add task: $e")),
+        );
+      }
+    } else {
+      // Show error if the input is empty
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Task Added: $task")),
+        const SnackBar(content: Text("Task cannot be empty")),
       );
-      _taskController.clear(); // Clear input after submission
     }
   }
 
@@ -36,26 +63,19 @@ class _MentalStimulationWidgetState extends State<MentalStimulationWidget> {
         const SizedBox(height: 10),
         TextField(
           controller: _taskController,
-          decoration:  customInputDecoration(
+          decoration: customInputDecoration(
             labelText: "Enter a learning task",
             prefixIcon: const Icon(Icons.bookmark_add_outlined),
-            hintText: 'Enter a learning task',
+            hintText: "e.g I want to learn French",
           ),
         ),
         const SizedBox(height: 20),
         Center(
           child: CustomPrimaryButton(
             label: 'Submit',
-            onPressed: () {  },),
+            onPressed: _checkTask, // Call the method to push the task
+          ),
         ),
-        const SizedBox(height: 10),
-        // ElevatedButton(
-        //   onPressed: _checkTask,
-        //   style: ElevatedButton.styleFrom(
-        //     backgroundColor: const Color(0xFF66C3A7), // Green theme color
-        //   ),
-        //   child: const Text("Submit"),
-        // ),
       ],
     );
   }
