@@ -164,9 +164,10 @@ class _ChallengePageState extends State<ChallengePage> {
             const SizedBox(height: 10),
             // User enters task
             TextField(
+              controller: _taskController,
               decoration: customInputDecoration(
                 labelText: 'Enter Task',
-                hintText: 'e.g. Buy groceries',
+                hintText: 'e.g. To-do list items',
                 prefixIcon: const Icon(Icons.bookmark, color: Colors.green),
               ),
               onChanged: (value) {
@@ -202,32 +203,19 @@ class _ChallengePageState extends State<ChallengePage> {
     );
   }
 
-  void _checkTask() async {
+  void _checkTask() {
     if (selectedDay == null || selectedTask == null) return;
-
-    // Fetch latest tasks from Firestore
-    final doc = await FirebaseFirestore.instance
-        .collection('todo-goals')
-        .doc('MDRk5pcRwqhlqlmbGYXhX8AJuKF3')
-        .get();
-
-    Map<String, List<String>> latestWeeklyTasks = {};
-    if (doc.exists) {
-      final data = doc.data()!;
-      latestWeeklyTasks = data.map((key, value) =>
-          MapEntry(key, List<String>.from(value as List)));
-    }
 
     // Normalize user input
     final dayKey = selectedDay!.trim().toLowerCase();
     final userTask = selectedTask!.trim().toLowerCase();
 
-    // Find the matching day in latestWeeklyTasks (case-insensitive)
-    final matchingDay = latestWeeklyTasks.keys.firstWhere(
+    // Find the matching day in weeklyTasks (case-insensitive)
+    final matchingDay = weeklyTasks.keys.firstWhere(
       (k) => k.trim().toLowerCase() == dayKey,
       orElse: () => '',
     );
-    final taskGoalList = matchingDay.isNotEmpty ? latestWeeklyTasks[matchingDay] : null;
+    final taskGoalList = matchingDay.isNotEmpty ? weeklyTasks[matchingDay] : null;
 
     // Compare user input with each task title (case-insensitive, trimmed)
     bool correct = taskGoalList != null &&
@@ -242,7 +230,10 @@ class _ChallengePageState extends State<ChallengePage> {
       } else if (!correct) {
         _showTryAgainDialog();
       }
+      // Reset fields after submit
+      selectedDay = null;
       selectedTask = null;
+      _taskController.clear();
     });
   }
 
