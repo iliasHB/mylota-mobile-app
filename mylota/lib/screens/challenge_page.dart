@@ -182,6 +182,10 @@ class _ChallengePageState extends State<ChallengePage> {
               onPressed: () {
                 if (selectedDay != null && selectedDay!.isNotEmpty && selectedTask != null && selectedTask!.isNotEmpty) {
                   _checkTask();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Please select a day and enter a task before submitting.")),
+                  );
                 }
               },
             ),
@@ -227,8 +231,14 @@ class _ChallengePageState extends State<ChallengePage> {
         score++;
         rememberedPerDay[matchingDay] = (rememberedPerDay[matchingDay] ?? 0) + 1;
         _showTrophyDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Correct! Task remembered.")),
+        );
       } else if (!correct) {
         _showTryAgainDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Incorrect. That task does not match the day's to-do list.")),
+        );
       }
       // Reset fields after submit
       selectedDay = null;
@@ -258,7 +268,7 @@ class _ChallengePageState extends State<ChallengePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Try Again"),
-        content: const Text("That task does not match today's to-do list."),
+        content: const Text("That task does not match the day's to-do list."),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
