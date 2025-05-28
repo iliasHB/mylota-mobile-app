@@ -64,6 +64,18 @@ class _PuzzleGameState extends State<PuzzleGame> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Add this description
+            const Padding(
+              padding:
+                  EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+              child: Text(
+                'How to play:\n\n'
+                'Tap a tile next to the empty space to move it. '
+                'Arrange the numbers in order from 1 to 11, with the empty space at the end, to solve the puzzle.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, color: Colors.black87),
+              ),
+            ),
             GridView.builder(
               shrinkWrap: true,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -106,9 +118,9 @@ class _PuzzleGameState extends State<PuzzleGame> {
                 setState(() {
                   _initializeTiles();
                 });
-              },),
-              //child: const Text('Restart'),
-            
+              },
+            ),
+            //child: const Text('Restart'),
           ],
         ),
       ),
