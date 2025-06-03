@@ -5,6 +5,7 @@ import 'package:mylota/screens/splash_screen.dart';
 import 'package:mylota/utils/permission_util.dart';
 import 'package:provider/provider.dart';
 
+import 'core/services/background_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/usecase/provider/exercise_timer_provider.dart';
 import 'core/usecase/provider/meal_planner_provider.dart';
@@ -14,6 +15,7 @@ import 'core/usecase/provider/water_intake_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
   // await NotificationService.initializeNotification();
   final waterReminderProvider = WaterReminderProvider();
   final mealReminderProvider = MealPlannerProvider();

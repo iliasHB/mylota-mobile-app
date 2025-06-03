@@ -6,6 +6,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:provider/provider.dart';
 
 import '../core/usecase/provider/water_intake_provider.dart';
+import '../utils/pref_util.dart';
 
 class WaterInTakeController {
   static Future<void> saveWaterIntake(
@@ -35,6 +36,14 @@ class WaterInTakeController {
         'createdAt': todayStr,
         // 'createdAt': DateTime.now().toIso8601String(),
       });
+
+      // PrefUtils prefUtils = PrefUtils();
+      // await prefUtils.setInt('exercise_minutes', _exerciseGoal.toInt());
+      // await prefUtils.setExerciseStr('exercise_name', selectedItem!);
+      //
+      // /// Start background service
+      // final service = FlutterBackgroundService();
+      // await service.startService();
 
       Provider.of<WaterReminderProvider>(context, listen: false)
           .startDailyWaterIntakeTimer(waterIntake.toString(),

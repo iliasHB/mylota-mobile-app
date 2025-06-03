@@ -1,9 +1,11 @@
 
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:mylota/utils/pref_util.dart';
 
 
 Future<void> initializeService() async {
@@ -17,7 +19,7 @@ Future<void> initializeService() async {
         autoStartOnBoot: true,
         // notificationChannelId: '',
         initialNotificationContent: 'Initializing...',
-        initialNotificationTitle: 'SmartE Service',
+        initialNotificationTitle: 'MyLota Service',
         foregroundServiceNotificationId: 888
     ),
     iosConfiguration: IosConfiguration(
@@ -35,32 +37,61 @@ bool onIosBackground(ServiceInstance service) {
   return true;
 }
 
-void onStart(ServiceInstance service) {
-  DartPluginRegistrant.ensureInitialized();
-  Random random = Random();
-  int randomNumber = random.nextInt(100);
-  // Register MQTTClient
-  // final mqttClient = MqttServerClient(privateBrokerAddress, randomNumber.toString());
-  // final mqttClientManager = MQTTClientManager(mqttClient);
+void onStart(ServiceInstance service) async {
 
-  // Connect to MQTT broker
-  // mqttClientManager.connect();
+  final prefs = PrefUtils();//await SharedPreferences.getInstance();
+  int remainingTime = await prefs.getInt('exercise_minutes') ?? 10;
+  String exerciseName = await prefs.getExerciseStr('exercise_name') ?? '';
 
-  // Listen for MQTT messages and trigger a notification
-  // mqttClientManager.onMessageReceived().listen((message) {
-    // Trigger local notification
-    FlutterLocalNotificationsPlugin().show(
-        888, // Notification ID
-        "MyLota",
-        "Message: Initializing...",
-        const NotificationDetails(
-            android:
-            AndroidNotificationDetails('MyLota', 'Notification',
-              channelDescription: 'MyLota update',
+  if(exerciseName.isNotEmpty || exerciseName != "") {
+    Timer.periodic(const Duration(seconds: 1), (timer) {
+      remainingTime--;
+      if (remainingTime <= 0) {
+        FlutterLocalNotificationsPlugin().show(
+          9,
+          'Exercise Complete! 💪',
+          'You finished $exerciseName!',
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'exercise_timer_channel',
+              'Exercise Timer',
+              channelDescription: 'Notifies when your exercise ends',
               importance: Importance.max,
-              priority: Priority.high,)
-        )
-    );
+              priority: Priority.high,
+            ),
+          ),
+        );
+        timer.cancel();
+        service.stopSelf();
+      }
+    });
+  }
+
+  // DartPluginRegistrant.ensureInitialized();
+  // Random random = Random();
+  // int randomNumber = random.nextInt(100);
+  // // Register MQTTClient
+  // // final mqttClient = MqttServerClient(privateBrokerAddress, randomNumber.toString());
+  // // final mqttClientManager = MQTTClientManager(mqttClient);
+  //
+  // // Connect to MQTT broker
+  // // mqttClientManager.connect();
+  //
+  // // Listen for MQTT messages and trigger a notification
+  // // mqttClientManager.onMessageReceived().listen((message) {
+  //   // Trigger local notification
+  //   FlutterLocalNotificationsPlugin().show(
+  //       888, // Notification ID
+  //       "MyLota",
+  //       "Message: Initializing...",
+  //       const NotificationDetails(
+  //           android:
+  //           AndroidNotificationDetails('MyLota', 'Notification',
+  //             channelDescription: 'MyLota update',
+  //             importance: Importance.max,
+  //             priority: Priority.high,)
+  //       )
+  //   );
   // });
 
 
