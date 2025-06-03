@@ -85,6 +85,17 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Description on how to play
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Text(
+                'How to play:\n\n'
+                '1. Memorize the sequence of colored squares shown at the top.\n'
+                '2. After the pattern disappears, repeat the sequence by tapping the colored buttons in the same order.\n'
+                '3. Each level adds one more color to the pattern. Try to get as far as you can!',
+                style: TextStyle(fontSize: 16, color: Colors.black87),
+              ),
+            ),
             if (!isGameOver)
               Column(
                 children: [
@@ -94,7 +105,7 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
                   ),
                   const SizedBox(height: 10),
                   SingleChildScrollView(
-                    scrollDirection: Axis.horizontal, // Allow horizontal scrolling
+                    scrollDirection: Axis.horizontal,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: pattern
@@ -124,8 +135,8 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
               ),
             const SizedBox(height: 20),
             Wrap(
-              spacing: 8.0, // Horizontal spacing between buttons
-              runSpacing: 8.0, // Vertical spacing between rows
+              spacing: 8.0,
+              runSpacing: 8.0,
               alignment: WrapAlignment.center,
               children: [
                 _buildColorButton(0, Colors.red),
@@ -139,10 +150,8 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
               child: CustomPrimaryButton(
                 label: 'Restart Game',
                 onPressed: _startNewGame,
-                //child: const Text('Restart Game'),
               ),
             ),
-            
           ],
         ),
       ),

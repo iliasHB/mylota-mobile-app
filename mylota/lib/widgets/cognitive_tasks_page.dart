@@ -81,6 +81,17 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  // Description on how to play
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 16.0),
+                    child: Text(
+                      'How to play:\n\n'
+                      'A word will appear on the screen. Your task is to quickly decide if it is an Animal, Fruit, or Tool and tap the correct category button. '
+                      'You have 90 seconds to categorize as many words as you can. Try to be fast and accurate!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ),
                   Text(
                     'Time Left: $timeLeft seconds',
                     style: const TextStyle(

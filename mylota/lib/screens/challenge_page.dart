@@ -111,7 +111,13 @@ class _ChallengePageState extends State<ChallengePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _sendEmail,
+        onPressed: () {
+    launchEmail(
+      toEmail: 'mylota138@gmail.com',
+      subject: 'Help Request',
+      body: 'Hi, I need assistance with...',
+    );
+  },
         label: const Text("Need Help?"),
         icon: const Icon(Icons.help_outline),
         backgroundColor: const Color(0xFF66C3A7),
@@ -134,12 +140,13 @@ class _ChallengePageState extends State<ChallengePage> {
               "Remember Your Weekly Tasks",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            // Change to dropdown for week days
             DropdownButtonFormField<String>(
               value: selectedDay,
-              items: weeklyTasks.keys.map((day) {
+              items: weekDaysWithDates.map((dayMap) {
                 return DropdownMenuItem(
-                  value: day,
-                  child: Text(day),
+                  value: dayMap['value'],
+                  child: Text(dayMap['label']!),
                 );
               }).toList(),
               onChanged: (value) {
@@ -155,38 +162,45 @@ class _ChallengePageState extends State<ChallengePage> {
               ),
             ),
             const SizedBox(height: 10),
-            DropdownButtonFormField<String>(
-              value: selectedTask,
-              items: (selectedDay != null && weeklyTasks[selectedDay!] != null)
-                  ? weeklyTasks[selectedDay!]!.map((task) {
-                      return DropdownMenuItem(
-                        value: task,
-                        child: Text(task),
-                      );
-                    }).toList()
-                  : [],
-              onChanged: (value) {
-                setState(() {
-                  selectedTask = value;
-                });
-              },
+            // User enters task
+            TextField(
+              controller: _taskController,
               decoration: customInputDecoration(
-                labelText: 'Select Task',
-                hintText: 'Choose a task to remember',
+                labelText: 'Enter Task',
+                hintText: 'e.g. To-do list items',
                 prefixIcon: const Icon(Icons.bookmark, color: Colors.green),
               ),
+              onChanged: (value) {
+                setState(() {
+                  selectedTask = value.trim();
+                });
+              },
             ),
             const SizedBox(height: 10),
             CustomPrimaryButton(
               label: "Submit Task",
-              onPressed: (selectedDay != null && selectedTask != null)
-                  ? _checkTask
-                  : () {},
+              onPressed: () {
+                if (selectedDay != null && selectedDay!.isNotEmpty && selectedTask != null && selectedTask!.isNotEmpty) {
+                  _checkTask();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Please select a day and enter a task before submitting.")),
+                  );
+                }
+              },
             ),
             Text(
               "Score: $score / ${weeklyTasks.values.expand((x) => x).length}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
+            if (selectedDay != null && weeklyTasks[selectedDay!] != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(
+                  "Tasks for ${selectedDay!}: ${weeklyTasks[selectedDay!]!.join(', ')}",
+                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+              ),
           ],
         ),
       ),
@@ -195,17 +209,41 @@ class _ChallengePageState extends State<ChallengePage> {
 
   void _checkTask() {
     if (selectedDay == null || selectedTask == null) return;
-    bool correct = weeklyTasks[selectedDay!]!.contains(selectedTask!);
+
+    // Normalize user input
+    final dayKey = selectedDay!.trim().toLowerCase();
+    final userTask = selectedTask!.trim().toLowerCase();
+
+    // Find the matching day in weeklyTasks (case-insensitive)
+    final matchingDay = weeklyTasks.keys.firstWhere(
+      (k) => k.trim().toLowerCase() == dayKey,
+      orElse: () => '',
+    );
+    final taskGoalList = matchingDay.isNotEmpty ? weeklyTasks[matchingDay] : null;
+
+    // Compare user input with each task title (case-insensitive, trimmed)
+    bool correct = taskGoalList != null &&
+        taskGoalList.any((t) => t.trim().toLowerCase() == userTask);
+
     setState(() {
-      if (correct && !(userAnswers.contains("$selectedDay:$selectedTask"))) {
-        userAnswers.add("$selectedDay:$selectedTask");
+      if (correct && !(userAnswers.contains("$matchingDay:$userTask"))) {
+        userAnswers.add("$matchingDay:$userTask");
         score++;
-        rememberedPerDay[selectedDay!] = (rememberedPerDay[selectedDay!] ?? 0) + 1;
+        rememberedPerDay[matchingDay] = (rememberedPerDay[matchingDay] ?? 0) + 1;
         _showTrophyDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Correct! Task remembered.")),
+        );
       } else if (!correct) {
         _showTryAgainDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Incorrect. That task does not match the day's to-do list.")),
+        );
       }
+      // Reset fields after submit
+      selectedDay = null;
       selectedTask = null;
+      _taskController.clear();
     });
   }
 
@@ -230,7 +268,7 @@ class _ChallengePageState extends State<ChallengePage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Try Again"),
-        content: const Text("That task does not match today's to-do list."),
+        content: const Text("That task does not match the day's to-do list."),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -296,18 +334,50 @@ class _ChallengePageState extends State<ChallengePage> {
     );
   }
 
-  void _sendEmail() async {
-    final Uri emailLaunchUri = Uri(
-      scheme: 'mailto',
-      path: 'mylota138@yahoo.com',
-      query: Uri.encodeFull('subject=Weekly Challenge Feedback&body=Hello,'),
-    );
-    if (await canLaunchUrl(emailLaunchUri)) {
-      await launchUrl(emailLaunchUri);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Could not open email app")),
-      );
-    }
+  void launchEmail({
+  required String toEmail,
+  String subject = '',
+  String body = '',
+}) async {
+  final Uri emailUri = Uri(
+    scheme: 'mailto',
+    path: toEmail,
+    queryParameters: {
+      'subject': subject,
+      'body': body,
+    },
+  );
+
+  if (await canLaunchUrl(emailUri)) {
+    await launchUrl(emailUri);
+  } else {
+    throw 'Could not launch email client';
+  }
+}
+
+
+  List<Map<String, String>> get weekDaysWithDates {
+    final now = DateTime.now();
+    // Find the most recent Monday
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final days = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+    ];
+    return List.generate(7, (i) {
+      final date = monday.add(Duration(days: i));
+      final formatted = "${date.day.toString().padLeft(2, '0')} ${_monthName(date.month)}";
+      return {
+        'label': "${days[i]} ($formatted)",
+        'value': days[i],
+      };
+    });
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
   }
 }

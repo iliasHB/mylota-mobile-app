@@ -48,7 +48,7 @@ class _MealPlannerState extends State<MealPlanner> {
 
       if (docSnapshot.exists) {
         List<dynamic> data = docSnapshot["vegetable1"] ?? [];
-        List<dynamic> data2 = docSnapshot["vegatable-2"] ?? [];
+        List<dynamic> data2 = docSnapshot["vegetable-2"] ?? [];
         setState(() {
           dropdownItems = List<String>.from(data);
           dropdownItemsVeg2 = List<String>.from(data2);
@@ -219,9 +219,8 @@ class _MealPlannerState extends State<MealPlanner> {
                   : null,
               decoration: customInputDecoration(
                 labelText: 'Select vegetable 1',
-                hintText: dropdownItems.isNotEmpty
-                    ? 'Choose first veges'
-                    : 'No options available',
+                hintText: 'Choose first vegetable',
+                   // : 'No options available',
                 prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
               ),
             ),
@@ -247,7 +246,7 @@ class _MealPlannerState extends State<MealPlanner> {
                 },
                 decoration: customInputDecoration(
                   labelText: 'Select vegetable 2',
-                  hintText: 'Choose second veges',
+                  hintText: 'Choose second vegetable',
                   prefixIcon: const Icon(Icons.set_meal, color: Colors.green),
                 )),
             const SizedBox(height: 20),
