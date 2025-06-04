@@ -55,6 +55,7 @@ dependencies:
   audioplayers: ^5.2.1
   flutter_phone_direct_caller: ^2.1.1
   flutter_background_service: ^5.1.0
+  webview_flutter: ^4.10.0
 #  open_mail_app: ^0.4.5
 
 dev_dependencies:

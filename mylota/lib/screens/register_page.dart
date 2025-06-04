@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mylota/controller/register_controller.dart';
 import 'package:mylota/screens/login_page.dart';
+import 'package:mylota/screens/payment_method.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
 import '../widgets/custom_input_decorator.dart';
@@ -227,7 +228,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 TextFormField(
                   controller: addressController,
-                  obscureText: true,
                   decoration: customInputDecoration(
                     labelText: 'address',
                     hintText: '10 abc street, state',
@@ -235,7 +235,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Address can not be empty";
                     }
                     return null;
                   },
@@ -271,7 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 isLoading
                     ? const CustomContainerLoadingButton()
                     : CustomPrimaryButton(
-                  label: 'Login',
+                  label: 'Register',
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
                         if (country == null || selectedPlan == null) {
@@ -300,16 +300,23 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void register() {
-    RegisterController.registerUser(
-        emailController.text.trim(),
-        pwdController.text.trim(),
-        firstnameController.text.trim(),
-        lastnameController.text.trim(),
-        selectedPlan,
-        country,
-        addressController.text.trim(),
-        onStartLoading: _startLoading,
-        onStopLoading: _stopLoading,
-        context: context);
+    if (!selectedPlan!.contains("Trial")) {
+      Navigator.push(context, MaterialPageRoute(builder: (_)
+      => PaymentGateway(
+          email: emailController.text.trim(),
+          price: selectedPlan!
+      )));
+    }
+    // RegisterController.registerUser(
+    //     emailController.text.trim(),
+    //     pwdController.text.trim(),
+    //     firstnameController.text.trim(),
+    //     lastnameController.text.trim(),
+    //     selectedPlan,
+    //     country,
+    //     addressController.text.trim(),
+    //     onStartLoading: _startLoading,
+    //     onStopLoading: _stopLoading,
+    //     context: context);
   }
 }
