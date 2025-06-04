@@ -18,5 +18,7 @@ class Constant {
     'day 7': 'Saturday',
   };
 
+  // var url = "https://api.paystack.co/transaction/initialize";
+
 }
 

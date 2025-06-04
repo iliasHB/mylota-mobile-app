@@ -48,8 +48,8 @@ void onStart(ServiceInstance service) async {
       remainingTime--;
       if (remainingTime <= 0) {
         FlutterLocalNotificationsPlugin().show(
-          9,
-          'Exercise Complete! 💪',
+          888,
+          'Exercise bg Complete! 💪',
           'You finished $exerciseName!',
           const NotificationDetails(
             android: AndroidNotificationDetails(

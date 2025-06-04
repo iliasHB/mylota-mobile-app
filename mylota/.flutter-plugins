@@ -42,7 +42,9 @@ url_launcher_linux=/Users/mac/.pub-cache/hosted/pub.dev/url_launcher_linux-3.2.1
 url_launcher_macos=/Users/mac/.pub-cache/hosted/pub.dev/url_launcher_macos-3.2.2/
 url_launcher_web=/Users/mac/.pub-cache/hosted/pub.dev/url_launcher_web-2.3.3/
 url_launcher_windows=/Users/mac/.pub-cache/hosted/pub.dev/url_launcher_windows-3.1.4/
-=======
+webview_flutter=/Users/mac/.pub-cache/hosted/pub.dev/webview_flutter-4.10.0/
+webview_flutter_android=/Users/mac/.pub-cache/hosted/pub.dev/webview_flutter_android-4.3.2/
+webview_flutter_wkwebview=/Users/mac/.pub-cache/hosted/pub.dev/webview_flutter_wkwebview-3.22.0/
 android_intent_plus=C:\\Users\\USER\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\android_intent_plus-4.0.3\\
 audioplayers=C:\\Users\\USER\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\audioplayers-5.2.1\\
 audioplayers_android=C:\\Users\\USER\\AppData\\Local\\Pub\\Cache\\hosted\\pub.dev\\audioplayers_android-4.0.3\\
