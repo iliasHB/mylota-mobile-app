@@ -59,5 +59,7 @@
     <string>superhuman</string>
     <string>protonmail</string>
 </array>
+	<key>NSUserNotificationAlertUsageDescription</key>
+	<string>This app uses notifications to remind you of your learning journey and wellbeing tasks.</string>
 </dict>
 </plist>

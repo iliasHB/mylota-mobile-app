@@ -9,7 +9,7 @@ Future<PaystackResponse?> createPaystackTransaction(String email, String amount)
       Uri.parse('https://api.paystack.co/transaction/initialize'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sk_test_r3m3mb3r2pu70nasm1l3', // Replace with your key
+        'Authorization': 'Bearer sk_test_e54bf2f6ed0da3e19e8749c2e01961ba62cd13fc', // Replace with your key
       },
       body: jsonEncode({
         'email': email,

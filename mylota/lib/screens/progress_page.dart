@@ -10,6 +10,7 @@ import '../core/usecase/provider/exercise_timer_provider.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
 import '../widgets/more_meal_schedule.dart';
 import '../widgets/more_todos.dart';
+import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class ProgressPage extends StatefulWidget {
   final double exerciseGoal;
@@ -623,7 +624,6 @@ class _ProgressPageState extends State<ProgressPage> {
                               final s =
                                   (r.inSeconds % 60).toString().padLeft(2, '0');
                               return Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text('Sleeping Countdown',
@@ -814,17 +814,17 @@ class _ProgressPageState extends State<ProgressPage> {
         Slider(
           value: double.parse(data.toString()),
           min: 0,
-          max: 2.0,
+          max: 5.0,
           activeColor: const Color(0xFF66C3A7), // Updated slider color
           thumbColor: const Color(0xFF2A7F67), // Thumb color for consistency
           onChanged: (value) {
             setState(() {
               waterConsumed = double.parse(data.toString());
-              waterIntakeProgress = (waterConsumed / 2.0) * 100;
+              waterIntakeProgress = (waterConsumed / 5.0) * 100;
             });
           },
         ),
-        Text('${double.parse(data.toString()) ?? waterConsumed}L / 2.0L'),
+        Text('${double.parse(data.toString()) ?? waterConsumed}L / 5.0L'),
       ],
     );
   }

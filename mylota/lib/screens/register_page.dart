@@ -132,7 +132,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Last name can not be empty";
                     }
                     return null;
                   },
@@ -147,7 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Phone number can not be empty";
                     }
                     return null;
                   },
@@ -162,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "email can not be empty";
                     }
                     return null;
                   },
@@ -179,7 +179,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Password can not be empty";
                     }
                     return null;
                   },
@@ -190,13 +190,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: retypePwdController,
                   obscureText: true,
                   decoration: customInputDecoration(
-                    labelText: 'confirm password',
+                    labelText: 'Confirm password',
                     hintText: '*******',
                     prefixIcon: const Icon(Icons.lock, color: Colors.green),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Confirm password can not be empty";
                     }
                     return null;
                   },
@@ -277,7 +277,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (country == null || selectedPlan == null) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(
-                                "country or plan not selected",
+                                "Subscription plan not selected",
                                 style: AppStyle.cardfooter,
                               )));
                         }
@@ -307,16 +307,32 @@ class _RegisterPageState extends State<RegisterPage> {
           price: selectedPlan!
       )));
     }
-    // RegisterController.registerUser(
-    //     emailController.text.trim(),
-    //     pwdController.text.trim(),
-    //     firstnameController.text.trim(),
-    //     lastnameController.text.trim(),
-    //     selectedPlan,
-    //     country,
-    //     addressController.text.trim(),
-    //     onStartLoading: _startLoading,
-    //     onStopLoading: _stopLoading,
-    //     context: context);
+    else if (selectedPlan == ("Trial")) {
+      // Handle trial registration logic here
+      //_startLoading();
+      // Assuming you have a method to handle trial registration
+      // RegisterController.registerTrialUser(
+      //     emailController.text.trim(),
+      //     pwdController.text.trim(),
+      //     firstnameController.text.trim(),
+      //     lastnameController.text.trim(),
+      //     selectedPlan,
+      //     country,
+      //     addressController.text.trim(),
+      //     onStartLoading: _startLoading,
+      //     onStopLoading: _stopLoading,
+      //     context: context);
+    }
+    RegisterController.registerUser(
+        emailController.text.trim(),
+        pwdController.text.trim(),
+        firstnameController.text.trim(),
+        lastnameController.text.trim(),
+        selectedPlan,
+        country,
+        addressController.text.trim(),
+        onStartLoading: _startLoading,
+        onStopLoading: _stopLoading,
+        context: context);
   }
 }

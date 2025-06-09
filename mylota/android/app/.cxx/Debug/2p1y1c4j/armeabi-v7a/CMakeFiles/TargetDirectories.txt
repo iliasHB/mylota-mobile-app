@@ -1,0 +1,2 @@
+C:/Users/USER/StudioProjects/mylota-mobile-app/mylota/android/app/.cxx/Debug/2p1y1c4j/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/USER/StudioProjects/mylota-mobile-app/mylota/android/app/.cxx/Debug/2p1y1c4j/armeabi-v7a/CMakeFiles/rebuild_cache.dir
