@@ -3,7 +3,6 @@ import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/custom_input_decorator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:app_settings/app_settings.dart';
 
 class ChallengePage extends StatefulWidget {
   @override
@@ -105,7 +104,7 @@ class _ChallengePageState extends State<ChallengePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          _requestEmailPermissionAndLaunch(
+          launchEmail(
             toEmail: 'mylota138@gmail.com',
             subject: 'Help Request',
             body: 'Hi, I need assistance with...',
@@ -133,24 +132,55 @@ class _ChallengePageState extends State<ChallengePage> {
               "Remember Your Weekly Tasks",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            DropdownButtonFormField<String>(
-              value: selectedDateKey,
-              items: weekDaysWithDates.map((dayMap) {
-                return DropdownMenuItem(
-                  value: dayMap['value'],
-                  child: Text(dayMap['label']!),
+            // Calendar picker using customInputDecoration
+            GestureDetector(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                  lastDate: DateTime.now().add(const Duration(days: 30)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF2A7F67),
+                          onPrimary: Colors.white,
+                          onSurface: Colors.black,
+                        ),
+                        textButtonTheme: TextButtonThemeData(
+                          style: TextButton.styleFrom(
+                            foregroundColor: Color(0xFF2A7F67),
+                          ),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
                 );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedDateKey = value;
-                  selectedTask = null;
-                });
+                if (picked != null) {
+                  setState(() {
+                    selectedDateKey =
+                        "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                    selectedTask = null;
+                  });
+                }
               },
-              decoration: customInputDecoration(
-                labelText: 'Select Day',
-                hintText: 'Choose a day of the week',
-                prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+              child: AbsorbPointer(
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: customInputDecoration(
+                    labelText: 'Select Date',
+                    hintText: 'Choose a date',
+                    prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+                    suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.green),
+                  ),
+                  controller: TextEditingController(
+                    text: selectedDateKey != null
+                        ? _formattedDateLabel(selectedDateKey!)
+                        : '',
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 10),
@@ -175,7 +205,7 @@ class _ChallengePageState extends State<ChallengePage> {
                   _checkTask();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select a day and enter a task before submitting.")),
+                    const SnackBar(content: Text("Please select a date and enter a task before submitting.")),
                   );
                 }
               },
@@ -188,7 +218,7 @@ class _ChallengePageState extends State<ChallengePage> {
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  "Tasks for ${selectedDateKey!}: ${weeklyTasks[selectedDateKey!]!.join(', ')}",
+                  "Tasks for ${_formattedDateLabel(selectedDateKey!)}: ${weeklyTasks[selectedDateKey!]!.join(', ')}",
                   style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ),
@@ -322,7 +352,10 @@ class _ChallengePageState extends State<ChallengePage> {
     String subject = '',
     String body = '',
   }) async {
-    final Uri emailUri = Uri(
+    final gmailUrl = Uri.parse(
+      "googlegmail://co?to=$toEmail&subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}"
+    );
+    final mailtoUrl = Uri(
       scheme: 'mailto',
       path: toEmail,
       queryParameters: {
@@ -331,43 +364,18 @@ class _ChallengePageState extends State<ChallengePage> {
       },
     );
 
-    if (await canLaunchUrl(emailUri)) {
-      await launchUrl(emailUri);
+    // Try to launch Gmail app
+    if (await canLaunchUrl(gmailUrl)) {
+      await launchUrl(gmailUrl);
+    } else if (await canLaunchUrl(mailtoUrl)) {
+      // Fallback to default mail client
+      await launchUrl(mailtoUrl);
     } else {
-      throw 'Could not launch email client';
-    }
-  }
-
-  void _requestEmailPermissionAndLaunch({
-    required String toEmail,
-    String subject = '',
-    String body = '',
-  }) async {
-    final allowed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Permission Required"),
-        content: const Text(
-          "This feature needs permission to open your email app so you can contact support. Do you want to continue?",
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("Allow"),
-          ),
-        ],
-      ),
-    );
-
-    if (allowed == true) {
-      // Open app settings so user can manage permissions (if needed)
-      await AppSettings.openAppSettings();
-      // Then launch the email client
-      launchEmail(toEmail: toEmail, subject: subject, body: body);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No email app found. Please install or set up an email app.')),
+        );
+      }
     }
   }
 
@@ -395,5 +403,19 @@ class _ChallengePageState extends State<ChallengePage> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month - 1];
+  }
+
+  String _formattedDateLabel(String dateKey) {
+    try {
+      final parts = dateKey.split('-');
+      final date = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      return "${date.day.toString().padLeft(2, '0')} ${_monthName(date.month)} ${date.year}";
+    } catch (_) {
+      return dateKey;
+    }
   }
 }
