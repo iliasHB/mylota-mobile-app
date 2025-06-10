@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:country_picker/country_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 import 'package:mylota/controller/register_controller.dart';
 import 'package:mylota/screens/login_page.dart';
 import 'package:mylota/screens/payment_method.dart';
@@ -33,14 +35,21 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController contactController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
-  String? selectedPlan;
+  // String? selectedPlan;
+  Map<String, dynamic>? selectedPlan;
   String? country;
   bool isLoading = false;
-  List<String> subscriptionPlans = [];
+  // List<String> subscriptionPlans = [];
+  List<Map<String, dynamic>> subscriptionPlans = [];
   List<String> countries = [];
 
   void _startLoading() => setState(() => isLoading = true);
   void _stopLoading() => setState(() => isLoading = false);
+
+  // State variables
+  PhoneNumber phoneNumber = PhoneNumber(isoCode: 'NG');
+  String selectedCountryCode = 'NG';
+  String? selectedNationality;
 
   @override
   void initState() {
@@ -48,22 +57,25 @@ class _RegisterPageState extends State<RegisterPage> {
     fetchDropdownData();
   }
 
+
   Future<void> fetchDropdownData() async {
     try {
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
           .collection("user-inputs")
-          .doc(
-              "yQtkG0iE0dA0tcrQ8RAW") //3l8kubMtLGsE1kRn9FGN  Change this to your document ID
+          .doc("yQtkG0iE0dA0tcrQ8RAW") // replace with actual doc ID
           .get();
 
       if (docSnapshot.exists) {
-        List<dynamic> data = docSnapshot["Subscription"];
+        List<dynamic> subscription = docSnapshot["subscriptions"];
         List<dynamic> nationality = docSnapshot["country"];
+
         setState(() {
-          subscriptionPlans = List<String>.from(data);
+          // subscriptionPlans = subscription.map((item) => item["Type"].toString()).toList();
+          subscriptionPlans = List<Map<String, dynamic>>.from(subscription);
           countries = List<String>.from(nationality);
+
           if (subscriptionPlans.isNotEmpty) {
-            // selectedPlan = subscriptionPlans.first; // Default selection
+            // selectedPlan = subscriptionPlans.first;
           }
         });
       }
@@ -137,21 +149,21 @@ class _RegisterPageState extends State<RegisterPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: contactController,
-                  decoration: customInputDecoration(
-                    labelText: 'Phone number',
-                    hintText: 'Enter your phone number',
-                    prefixIcon: const Icon(Icons.call, color: Colors.green),
-                  ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "First name can not be empty";
-                    }
-                    return null;
-                  },
-                ),
+                // const SizedBox(height: 16),
+                // TextFormField(
+                //   controller: contactController,
+                //   decoration: customInputDecoration(
+                //     labelText: 'Phone number',
+                //     hintText: 'Enter your phone number',
+                //     prefixIcon: const Icon(Icons.call, color: Colors.green),
+                //   ),
+                //   validator: (value) {
+                //     if (value!.isEmpty) {
+                //       return "First name can not be empty";
+                //     }
+                //     return null;
+                //   },
+                // ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: emailController,
@@ -163,6 +175,101 @@ class _RegisterPageState extends State<RegisterPage> {
                   validator: (value) {
                     if (value!.isEmpty) {
                       return "First name can not be empty";
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+
+                // DropdownButtonFormField<String>(
+                //     value: country,
+                //     items: countries.map<DropdownMenuItem<String>>((nation) {
+                //       return DropdownMenuItem<String>(
+                //         value: nation,
+                //         child: Text(
+                //           nation,
+                //           style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                //         ),
+                //       );
+                //     }).toList(),
+                //     onChanged: (value) {
+                //       setState(() {
+                //         country = value;
+                //       });
+                //     },
+                //     decoration: customInputDecoration(
+                //       labelText: 'Select your nationality',
+                //       hintText: 'Choose your nationality',
+                //       prefixIcon: const Icon(Icons.flag, color: Colors.green),
+                //     )),
+///
+                // // Country picker for nationality
+                // DropdownButtonFormField<String>(
+                //   value: selectedNationality,
+                //   items: countries.map<DropdownMenuItem<String>>((nation) {
+                //     return DropdownMenuItem<String>(
+                //       value: nation,
+                //       child: Text(
+                //         nation,
+                //         style: AppStyle.cardfooter.copyWith(fontSize: 12),
+                //       ),
+                //     );
+                //   }).toList(),
+                //   onChanged: (value) {
+                //     setState(() {
+                //       selectedNationality = value;
+                //       // Optional: sync nationality to phone code if you map them
+                //     });
+                //   },
+                //   decoration: customInputDecoration(
+                //     labelText: 'Select your nationality',
+                //     hintText: 'Choose your nationality',
+                //     prefixIcon: const Icon(Icons.flag, color: Colors.green),
+                //   ),
+                // ),
+
+                const SizedBox(height: 16),
+                // International phone input with auto country code
+                InternationalPhoneNumberInput(
+                  onInputChanged: (PhoneNumber number) {
+                    final nation = Country.tryParse(number.isoCode ?? '');
+                    setState(() {
+                      phoneNumber = number;
+                      country = nation?.name;
+                    });
+
+                    print('Country: ${nation?.name}');
+                  },
+                  selectorConfig: const SelectorConfig(
+                    selectorType: PhoneInputSelectorType.DROPDOWN,
+                  ),
+                  initialValue: phoneNumber,
+                  textFieldController: contactController,
+                  inputDecoration: customInputDecoration(
+                    labelText: 'Phone number',
+                    hintText: 'Enter your phone number',
+                    prefixIcon: const Icon(Icons.call, color: Colors.green),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Phone number cannot be empty';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                TextFormField(
+                  controller: addressController,
+                  decoration: customInputDecoration(
+                    labelText: 'address',
+                    hintText: '10 abc street, state',
+                    prefixIcon: const Icon(Icons.home, color: Colors.green),
+                  ),
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      return "Address can not be empty";
                     }
                     return null;
                   },
@@ -201,56 +308,17 @@ class _RegisterPageState extends State<RegisterPage> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
 
-                DropdownButtonFormField<String>(
-                    value: country,
-                    items: countries.map<DropdownMenuItem<String>>((nation) {
-                      return DropdownMenuItem<String>(
-                        value: nation,
-                        child: Text(
-                          nation,
-                          style: AppStyle.cardfooter.copyWith(fontSize: 12),
-                        ),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        country = value;
-                      });
-                    },
-                    decoration: customInputDecoration(
-                      labelText: 'Select your nationality',
-                      hintText: 'Choose your nationality',
-                      prefixIcon: const Icon(Icons.flag, color: Colors.green),
-                    )),
-                const SizedBox(height: 16),
-
-                TextFormField(
-                  controller: addressController,
-                  decoration: customInputDecoration(
-                    labelText: 'address',
-                    hintText: '10 abc street, state',
-                    prefixIcon: const Icon(Icons.home, color: Colors.green),
-                  ),
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      return "Address can not be empty";
-                    }
-                    return null;
-                  },
-                ),
                 const SizedBox(height: 16),
                 // Subscription Plan Dropdown
 
-                DropdownButtonFormField<String>(
+                DropdownButtonFormField<Map<String, dynamic>>(
                     value: selectedPlan,
-                    items:
-                        subscriptionPlans.map<DropdownMenuItem<String>>((lg) {
-                      return DropdownMenuItem<String>(
-                        value: lg,
+                    items: subscriptionPlans.map<DropdownMenuItem<Map<String, dynamic>>>((plan) {
+                      return DropdownMenuItem<Map<String, dynamic>>(
+                        value: plan,
                         child: Text(
-                          lg,
+                          plan['Type'],
                           style: AppStyle.cardfooter.copyWith(fontSize: 12),
                         ),
                       );
@@ -274,7 +342,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   label: 'Register',
                     onPressed: () {
                       if (_formKey.currentState?.validate() ?? false) {
-                        if (country == null || selectedPlan == null) {
+                        if (selectedPlan == null) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(
                                 "country or plan not selected",
@@ -300,23 +368,63 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void register() {
-    if (!selectedPlan!.contains("Trial")) {
+    if (selectedPlan!['Type'] != 'Trial') {
       Navigator.push(context, MaterialPageRoute(builder: (_)
       => PaymentGateway(
           email: emailController.text.trim(),
-          price: selectedPlan!
+          price: selectedPlan!['Amount'],
+          description: selectedPlan!['Description'],
+          type: selectedPlan!['Type'],
+          password: pwdController.text.trim(),
+          firstname: firstnameController.text.trim(),
+          lastname: lastnameController.text.trim(),
+          country: country!,
+          address: addressController.text.trim(),
+          contact: contactController.text.trim()
       )));
+    } else {
+      RegisterController.registerUser(
+          emailController.text.trim(),
+          pwdController.text.trim(),
+          firstnameController.text.trim(),
+          lastnameController.text.trim(),
+          selectedPlan!['type'],
+          country!,
+          addressController.text.trim(),
+          onStartLoading: _startLoading,
+          onStopLoading: _stopLoading,
+          context: context,
+          selectedPlan!['amount'],
+          contactController.text.trim()
+      );
     }
-    // RegisterController.registerUser(
-    //     emailController.text.trim(),
-    //     pwdController.text.trim(),
-    //     firstnameController.text.trim(),
-    //     lastnameController.text.trim(),
-    //     selectedPlan,
-    //     country,
-    //     addressController.text.trim(),
-    //     onStartLoading: _startLoading,
-    //     onStopLoading: _stopLoading,
-    //     context: context);
+
   }
 }
+
+
+//
+// Future<void> fetchDropdownData() async {
+//   try {
+//     DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
+//         .collection("user-inputs")
+//         .doc("yQtkG0iE0dA0tcrQ8RAW") //3l8kubMtLGsE1kRn9FGN  Change this to your document ID
+//         .get();
+//
+//     if (docSnapshot.exists) {
+//       List<dynamic> data = docSnapshot["Subscription"];
+//       List<dynamic> nationality = docSnapshot["country"];
+//       setState(() {
+//         subscriptionPlans = List<String>.from(data);
+//         countries = List<String>.from(nationality);
+//         if (subscriptionPlans.isNotEmpty) {
+//           // selectedPlan = subscriptionPlans.first; // Default selection
+//         }
+//       });
+//     }
+//   } catch (e) {
+//     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+//         content: Text('Error fetching dropdown data: ${e.toString()}')));
+//     print("Error fetching dropdown data: $e");
+//   }
+// }

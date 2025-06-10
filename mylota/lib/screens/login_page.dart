@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mylota/screens/forget_password_page.dart';
 import 'package:mylota/screens/register_page.dart';
 import 'package:mylota/utils/pref_util.dart';
 import '../controller/login_controller.dart';
@@ -28,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
 
   PrefUtils prefUtils = PrefUtils();
 
-
   @override
   void initState() {
     super.initState();
@@ -41,6 +41,7 @@ class _LoginPageState extends State<LoginPage> {
     _emailController.dispose();
     super.dispose();
   }
+
   void _loadRememberMe() async {
     String? rememberedEmail = await prefUtils.getStr("rememberMe");
     if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
@@ -50,7 +51,6 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
   }
-
 
   void _toggleRememberMe(bool? value) {
     setState(() {
@@ -160,8 +160,10 @@ class _LoginPageState extends State<LoginPage> {
                   ],
                 ),
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, "/forgetPassword"),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ForgetPasswordPage())),
                   child: Text(
                     'Forgotten Password?',
                     style: AppStyle.cardfooter

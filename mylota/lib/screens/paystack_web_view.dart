@@ -1,16 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../controller/register_controller.dart';
 import '../controller/verify_payment_controller.dart';
 import '../widgets/payment_alert.dart';
 
 class PayStackWebView extends StatefulWidget {
-  final String auth_url, callbackUrl, reference;
+  final String auth_url,
+      callbackUrl,
+      reference,
+      email,
+      amount,
+      contact,
+      address,
+      type,
+      firstname,
+      lastname,
+      password,
+      country
+  ;
   const PayStackWebView(
       {super.key,
-        required this.auth_url,
-        required this.callbackUrl,
-        required this.reference});
+      required this.auth_url,
+      required this.callbackUrl,
+      required this.reference,
+      required this.email,
+      required this.amount,
+      required this.contact,
+      required this.address,
+      required this.type,
+      required this.firstname,
+      required this.lastname,
+        required this.password,
+        required this.country});
 
   @override
   State<PayStackWebView> createState() => _PayStackWebViewState();
@@ -63,7 +85,19 @@ class _PayStackWebViewState extends State<PayStackWebView> {
               address.toString().contains(widget.callbackUrl)) {
             print("-----------------verify payment here--------------------");
             // Navigator.of(context).pop();
-            verifyPayment(widget.reference, context);
+            verifyPayment(
+                widget.reference,
+                context,
+                widget.lastname,
+                widget.firstname,
+                widget.type,
+                widget.address,
+                widget.email,
+                widget.contact,
+                widget.amount,
+              widget.country,
+              widget.password
+            );
           }
           return NavigationDecision.navigate;
         },
@@ -103,16 +137,38 @@ class _PayStackWebViewState extends State<PayStackWebView> {
   }
 }
 
-
-void verifyPayment(String reference, BuildContext context) async {
+void verifyPayment(
+    String reference,
+    BuildContext context,
+    String lastname,
+    String firstname,
+    String type,
+    String address,
+    String email,
+    String contact,
+    String amount, String country, String password) async {
   final result = await verifyPaystackTransaction(reference);
 
   if (result != null && result.status && result.data.status == "success") {
     print("Payment verified for ${result.data.reference}");
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (_) => const PaymentAlert(isSuccess: true)));
+    RegisterController.registerUser(
+        email,
+        password,
+        firstname,
+        lastname,
+        type,
+        country,
+        address,
+        amount,
+        contact,
+        // onStartLoading: _startLoading,
+        // onStopLoading: _stopLoading,
+        context: context,
+
+    );
+    Navigator.push(context,
+        MaterialPageRoute(builder: (_) => const PaymentAlert(isSuccess: true)));
+
   } else {
     print("Payment verification failed.");
     Navigator.push(
