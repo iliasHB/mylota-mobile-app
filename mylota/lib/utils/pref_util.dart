@@ -66,6 +66,19 @@ class PrefUtils {
     return result;
   }
 
+
+  Future<dynamic> setStr(key, value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var result = prefs.setString('$key', value);
+    return result;
+  }
+
+  Future<dynamic> getStr(key) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    var result = prefs.getString('$key');
+    return result;
+  }
+
   Future<dynamic> setInt(key, value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     var result = prefs.setInt('$key', value);

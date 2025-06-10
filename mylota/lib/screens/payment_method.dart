@@ -34,9 +34,28 @@ import '../widgets/custom_button.dart';
 // }
 
 class PaymentGateway extends StatefulWidget {
-  final String email;
-  final String price;
-  const PaymentGateway({super.key, required this.email, required this.price});
+  final String email,
+      price,
+      description,
+      type,
+      contact,
+      password,
+      firstname,
+      lastname,
+      country,
+      address;
+  const PaymentGateway(
+      {super.key,
+      required this.email,
+      required this.price,
+      required this.description,
+      required this.type,
+      required this.password,
+      required this.firstname,
+      required this.lastname,
+      required this.country,
+      required this.address,
+      required this.contact});
 
   @override
   State<PaymentGateway> createState() => _PaymentGatewayState();
@@ -127,6 +146,13 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                 const SizedBox(
                   height: 10,
                 ),
+                Text(
+                  widget.description,
+                  style: AppStyle.cardfooter,
+                ),
+                const SizedBox(
+                  height: 10,
+                ),
                 Row(
                   children: [
                     Expanded(
@@ -152,7 +178,16 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                             //   response == null ? Container() : buildFutureBuilder();
                             //
                             // });
-                            initiatePayment();
+                            initiatePayment(
+                                widget.email,
+                                widget.price,
+                                widget.contact,
+                                widget.password,
+                                widget.country,
+                                widget.address,
+                                widget.type,
+                                widget.firstname,
+                                widget.lastname);
                             // / if (_formKey.currentState?.validate() ?? false) {
                             // final loginReqEntity = InitiatePaymentReqEntity(
                             //   email: widget.email,
@@ -247,27 +282,45 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     );
   }
 
-  void initiatePayment() async {
-    final result = await createPaystackTransaction('user@example.com', '100000');
+  void initiatePayment(
+      email,
+      amount,
+      String contact,
+      String password,
+      String country,
+      String address,
+      String type,
+      String firstname,
+      String lastname) async {
+    final result =
+        await createPaystackTransaction('user@example.com', '100000');
     if (result != null) {
       final url = result.data.authorization_url;
       print("Redirect user to Paystack URL: $url");
       // You can launch with `url_launcher`
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => PayStackWebView(
-                          auth_url: result.data.authorization_url,
-                          callbackUrl: '',
-                      reference: result.data.reference
-                        )));
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (_) => PayStackWebView(
+                  auth_url: result.data.authorization_url,
+                  callbackUrl: '',
+                  reference: result.data.reference,
+                  email: email,
+                  amount: amount,
+                  contact: contact,
+                  address: address,
+                  type: type,
+                  firstname: firstname,
+                  lastname: lastname,
+                password: password,
+                country: country
+              )));
     } else {
       print("Transaction failed to initialize.");
     }
   }
 
-
-///--------------------
+  ///--------------------
   // FutureBuilder<Response> buildFutureBuilder() {
   //   return FutureBuilder<Response>(
   //     future: response,

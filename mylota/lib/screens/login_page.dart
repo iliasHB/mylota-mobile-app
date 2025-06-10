@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:mylota/screens/forget_password_page.dart';
 import 'package:mylota/screens/register_page.dart';
+import 'package:mylota/utils/pref_util.dart';
 import '../controller/login_controller.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
@@ -25,9 +27,41 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isRememberMe = false;
 
+  PrefUtils prefUtils = PrefUtils();
+
   @override
   void initState() {
     super.initState();
+    _loadRememberMe();
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  void _loadRememberMe() async {
+    String? rememberedEmail = await prefUtils.getStr("rememberMe");
+    if (rememberedEmail != null && rememberedEmail.isNotEmpty) {
+      setState(() {
+        _emailController.text = rememberedEmail;
+        isRememberMe = true;
+      });
+    }
+  }
+
+  void _toggleRememberMe(bool? value) {
+    setState(() {
+      isRememberMe = value ?? false;
+    });
+
+    if (isRememberMe) {
+      prefUtils.setStr("rememberMe", _emailController.text.trim());
+    } else {
+      prefUtils.setStr("rememberMe", ""); // Clear saved email
+    }
   }
 
   void _login() {
@@ -72,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     TextFormField(
                       controller: _emailController,
-                      cursorColor: Color(0xFF66C3A7),
+                      cursorColor: const Color(0xFF66C3A7),
                       decoration: customInputDecoration(
                           labelText: 'Username or email',
                           hintText: 'abc@gmail.com'),
@@ -119,15 +153,17 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Checkbox(
                       value: isRememberMe,
-                      onChanged: null, //_toggleRememberMe,
+                      onChanged: _toggleRememberMe,
                       activeColor: Colors.green,
                     ),
                     const Text('Remember me'),
                   ],
                 ),
                 TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, "/forgetPassword"),
+                  onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ForgetPasswordPage())),
                   child: Text(
                     'Forgotten Password?',
                     style: AppStyle.cardfooter

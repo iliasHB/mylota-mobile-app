@@ -6,13 +6,20 @@ import 'package:mylota/screens/login_page.dart';
 import '../utils/styles.dart';
 
 class RegisterController {
-  static Future<void> registerUser(String email, String password,
-      String firstname, lastname, subscription, country, address,
-      {required VoidCallback onStartLoading,
-      required VoidCallback onStopLoading,
+  static Future<void> registerUser(
+      String email,
+      String password,
+      String firstname,
+      String lastname,
+      String subscriptionType,
+      String country,
+      String address,
+      String subscriptionAmount,
+      String contact,
+      {VoidCallback? onStartLoading, VoidCallback? onStopLoading,
       required BuildContext context}) async {
     try {
-      onStartLoading();
+      onStartLoading!();
       // Check if user already exists in Firebase Authentication
       var methods =
           await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
@@ -29,36 +36,54 @@ class RegisterController {
         password: password,
       );
 
+      // Create the subscription object
+      final subscriptionData = {
+        'type':
+            subscriptionType, // assuming `subscription` is the selected type like "Basic"
+        'amount': subscriptionAmount,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
       // Store user details in Firestore
       await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .set({
         'email': email,
-        'password': password,
+        'password': "",
         'firstname': firstname,
         'lastname': lastname,
-        'subscription': subscription,
+        'subscription': subscriptionData,
         'nationality': country,
         'address': address,
         'uid': userCredential.user!.uid,
+        'contact': contact,
         'createdAt': FieldValue.serverTimestamp(),
       });
       SnackBar(
         content:
             Text("User registered successfully", style: AppStyle.cardfooter),
       );
-      onStopLoading();
+      onStopLoading!();
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     } catch (e) {
-      onStopLoading();
+      onStopLoading!();
       SnackBar(
         content: Text("Error registering user: $e", style: AppStyle.cardfooter),
       );
     }
   }
 }
+
+// await FirebaseFirestore.instance
+//     .collection('users')
+// .doc(userId)
+//     .update({
+// 'subscription.type': newSubscription,
+// 'subscription.updatedAt': FieldValue.serverTimestamp(),
+// });
