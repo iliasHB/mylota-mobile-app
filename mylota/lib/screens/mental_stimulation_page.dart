@@ -12,9 +12,12 @@ import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:mylota/utils/permission_util.dart';
+import 'package:mylota/core/services/mental_notification_service.dart';
+import 'package:mylota/core/services/mental_background_service.dart';
+import 'package:mylota/controller/mental_stimulation_schedule_controller.dart';
 
 class MentalStimulationPage extends StatefulWidget {
   @override
@@ -79,7 +82,41 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   final TextEditingController _callSomeoneManualController = TextEditingController();
   final TextEditingController _checkLoverManualController = TextEditingController();
 
-  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+  // Loading state for async operations
+  bool isLoading = false;
+
+  // Timer for learning progress prompt
+  Timer? _learningProgressPromptTimer;
+
+  // Add to your state:
+  List<Map<String, dynamic>> learningProgressHistory = [];
+
+  @override
+  void initState() {
+    super.initState();
+    tz.initializeTimeZones();
+    tz.setLocalLocation(tz.getLocation('Africa/Lagos'));
+
+    // Initialize the notification service with a callback
+    MentalNotificationService.initializeNotification((payload) {
+      // Check if this is the learning journey end notification
+      if (payload == 'learning_end') {
+        // Use the latest task name if possible
+        _promptLearningProgress(_learningModuleController.text);
+      }
+    });
+
+    requestNotificationPermission(context);
+
+    // Move the periodic timer here and store it as a field
+    _learningProgressPromptTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
+      if (learningStartDateTime != null && learningEndDateTime != null) {
+        _promptLearningProgress(_learningModuleController.text);
+      }
+    });
+
+    _fetchGameProgress();
+  }
 
   @override
   void dispose() {
@@ -87,6 +124,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     _selfTreatLocationController.dispose();
     _callSomeoneManualController.dispose();
     _checkLoverManualController.dispose();
+    _learningProgressPromptTimer?.cancel(); // Cancel the timer
     super.dispose();
   }
 
@@ -221,7 +259,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     try {
       await FirebaseFirestore.instance
           .collection("Mental stimulation")
-          .doc("hiIyyqWGzb9eR4RgAHAl") // Replace with your document ID
+          .doc("hiIyyqWGzb9eR4RgAHAl")
           .collection("well-being-reminders")
           .add({
         "title": title,
@@ -263,21 +301,18 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    tz.initializeTimeZones();
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const settings = InitializationSettings(android: android);
-    flutterLocalNotificationsPlugin.initialize(settings);
-    // Prompt every 10 minutes (600 seconds)
-    Timer.periodic(const Duration(minutes: 10), (timer) {
-      if (learningStartDateTime != null && learningEndDateTime != null) {
-        _showProgressPrompt();
-      }
+  Future<void> _updateGameProgress(String gameType, int currentStep, int totalSteps) async {
+    final progress = ((currentStep / totalSteps) * 100).clamp(0, 100).toInt();
+    await FirebaseFirestore.instance
+        .collection("Mental stimulation")
+        .doc("hiIyyqWGzb9eR4RgAHAl")
+        .collection("game-progress")
+        .doc(gameType)
+        .set({
+      "score": currentStep,
+      "progress": progress,
+      "timestamp": FieldValue.serverTimestamp(),
     });
-    _fetchGameProgress();
   }
 
   Future<void> _fetchGameProgress() async {
@@ -312,7 +347,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
     });
   }
 
-  void _showProgressPrompt() async {
+ /*  void _showProgressPrompt() async {
     double? percent = await showDialog<double>(
       context: context,
       builder: (context) {
@@ -340,33 +375,76 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
         learningProgress = percent.toInt();
       });
     }
+  } */
+
+  void _promptLearningProgress(String task) async {
+    double? percent = await showDialog<double>(
+      context: context,
+      builder: (context) {
+        double tempPercent = 0;
+        return AlertDialog(
+          title: Text("Did you learn $task?"),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(hintText: "Enter percentage (0-100)"),
+            onChanged: (value) {
+              tempPercent = double.tryParse(value) ?? 0;
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(tempPercent),
+              child: const Text("OK"),
+            ),
+          ],
+        );
+      },
+    );
+    if (percent != null && percent >= 0 && percent <= 100) {
+      setState(() {
+        // Add new entry to the history
+        learningProgressHistory.add({
+          'task': task,
+          'percent': percent.toInt(),
+          'timestamp': DateTime.now(),
+        });
+        // Optionally, update the latest progress for the progress bar
+        learningProgress = percent.toInt();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Learning progress updated: $percent%")),
+      );
+    }
   }
 
-  Future<void> _scheduleNotification({
-    required String title,
-    required String body,
-    required DateTime scheduledDate,
-    required int id,
-  }) async {
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledDate, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'reminder_channel',
-          'Reminders',
-          channelDescription: 'Channel for time-based reminders',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // <-- Add this line
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
+  // Call this when a pattern/level is completed
+  void _onPatternLevelCompleted(int currentLevel, int totalLevels) async {
+    await FirebaseFirestore.instance
+        .collection("Mental stimulation")
+        .doc("hiIyyqWGzb9eR4RgAHAl")
+        .collection("game-progress")
+        .doc("Pattern Recognition")
+        .set({
+      "score": currentLevel,
+      "progress": ((currentLevel / totalLevels) * 100).clamp(0, 100).toInt(),
+      "timestamp": FieldValue.serverTimestamp(),
+    });
+
+    // Optionally, notify parent or refresh progress
+    // You can use a callback or a state management solution
+  }
+
+  void _onGameLevelCompleted(String gameType, int currentLevel, int totalLevels) async {
+    await FirebaseFirestore.instance
+        .collection("Mental stimulation")
+        .doc("hiIyyqWGzb9eR4RgAHAl")
+        .collection("game-progress")
+        .doc(gameType)
+        .set({
+      "score": currentLevel,
+      "progress": ((currentLevel / totalLevels) * 100).clamp(0, 100).toInt(),
+      "timestamp": FieldValue.serverTimestamp(),
+    });
   }
 
   @override
@@ -467,29 +545,44 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                     const SizedBox(height: 10),
                     CustomPrimaryButton(
                       label: "Save Learning Task",
-                      onPressed: () {
+                      onPressed: () async {
                         if (_learningModuleController.text.isNotEmpty &&
                             learningStartDateTime != null &&
                             learningEndDateTime != null) {
-                          _saveLearningJourney(
+                          await MentalStimulationScheduleController.saveLearningJourney(
                             _learningModuleController.text,
-                            learningStartDateTime!,
-                            learningEndDateTime!,
+                            learningStartDateTime,
+                            learningEndDateTime,
+                            context,
+                            onStartLoading: () => setState(() => isLoading = true),
+                            onStopLoading: () => setState(() => isLoading = false),
                           );
-                          // Schedule notification for start
-                          _scheduleNotification(
+
+                          // Schedule notifications for start and end
+                          await MentalNotificationService.scheduleLearningJourneyNotification(
+                            id: 100,
                             title: "Learning Task Start",
                             body: "Start: ${_learningModuleController.text}",
                             scheduledDate: learningStartDateTime!,
-                            id: 100,
                           );
-                          // Schedule notification for end
-                          _scheduleNotification(
+                          await MentalNotificationService.scheduleLearningJourneyNotification(
+                            id: 101,
                             title: "Learning Task End",
                             body: "End: ${_learningModuleController.text}",
                             scheduledDate: learningEndDateTime!,
-                            id: 101,
+                            payload: 'learning_end', // Add this line
                           );
+
+                          // Schedule a callback for the end time
+                          final Duration delay = learningEndDateTime!.difference(DateTime.now());
+                          if (delay.inMilliseconds > 0) {
+                            Future.delayed(delay, () {
+                              _promptLearningProgress(_learningModuleController.text);
+                            });
+                          }
+
+                          // Start the background service for the learning journey
+                          initializeMentalService();
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text("Please enter a task and set start/end date/time.")),
@@ -540,19 +633,37 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                     if (value == 'Puzzle') {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const PuzzleGame()),
+                        MaterialPageRoute(
+                          builder: (context) => PuzzleGame(
+                            onLevelCompleted: (currentLevel, totalLevels) {
+                              _updateGameProgress("Puzzle", currentLevel, totalLevels);
+                            },
+                          ),
+                        ),
                       );
                     } 
                     else if (value == 'Pattern Recognition') {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const PatternRecognitionGame()),
+                        MaterialPageRoute(
+                          builder: (context) => PatternRecognitionGame(
+                            onLevelCompleted: (currentLevel, totalLevels) {
+                              _updateGameProgress("Pattern Recognition", currentLevel, totalLevels);
+                            },
+                          ),
+                        ),
                       );
                     }
                     else if (value == 'Cognitive Tasks') {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const CognitiveTasksPage()),
+                        MaterialPageRoute(
+                          builder: (context) => CognitiveTasksPage(
+                            onLevelCompleted: (currentLevel, totalLevels) {
+                              _updateGameProgress("Cognitive Tasks", currentLevel, totalLevels);
+                            },
+                          ),
+                        ),
                       );
                     }
                   },
@@ -663,25 +774,100 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text('Learning Progress:'),
+                    LinearProgressIndicator(
+                      value: learningProgress / 100,
+                      color: Colors.blue,
+                      backgroundColor: Colors.blue.shade100,
+                    ),
+                    const SizedBox(height: 10),
+                    if (learningProgressHistory.isNotEmpty)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Progress History:', style: TextStyle(fontWeight: FontWeight.bold)),
+                          ...learningProgressHistory.map((entry) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            child: Text(
+                              "${entry['timestamp'].toString().substring(0, 16)}: ${entry['percent']}%",
+                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            ),
+                          )),
+                        ],
+                      ),
+                    const SizedBox(height: 10),
                     const Text('Puzzle Progress:'),
-                    LinearProgressIndicator(value: puzzleProgress / 100),
+                    StreamBuilder<DocumentSnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection("Mental stimulation")
+      .doc("hiIyyqWGzb9eR4RgAHAl")
+      .collection("game-progress")
+      .doc("Puzzle")
+      .snapshots(),
+  builder: (context, snapshot) {
+    final data = snapshot.data?.data() as Map<String, dynamic>?;
+    final progress = (data?['progress'] ?? 0) as int;
+    return LinearProgressIndicator(
+      value: progress / 100,
+      color: Colors.orange,
+      backgroundColor: Colors.orange.shade100,
+    );
+  },
+),
                     const SizedBox(height: 10),
                     const Text('Pattern Recognition Progress:'),
-                    LinearProgressIndicator(value: patternRecognitionProgress / 100),
+                    StreamBuilder<DocumentSnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection("Mental stimulation")
+      .doc("hiIyyqWGzb9eR4RgAHAl")
+      .collection("game-progress")
+      .doc("Pattern Recognition")
+      .snapshots(),
+  builder: (context, snapshot) {
+    final data = snapshot.data?.data() as Map<String, dynamic>?;
+    final progress = (data?['progress'] ?? 0) as int;
+    return LinearProgressIndicator(
+      value: progress / 100,
+      color: Colors.purple,
+      backgroundColor: Colors.purple.shade100,
+    );
+  },
+),
                     const SizedBox(height: 10),
                     const Text('Cognitive Tasks Progress:'),
-                    LinearProgressIndicator(value: cognitiveTasksProgress / 100),
+                    StreamBuilder<DocumentSnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection("Mental stimulation")
+      .doc("hiIyyqWGzb9eR4RgAHAl")
+      .collection("game-progress")
+      .doc("Cognitive Tasks")
+      .snapshots(),
+  builder: (context, snapshot) {
+    final data = snapshot.data?.data() as Map<String, dynamic>?;
+    final progress = (data?['progress'] ?? 0) as int;
+    return LinearProgressIndicator(
+      value: progress / 100,
+      color: Colors.green,
+      backgroundColor: Colors.green.shade100,
+    );
+  },
+),
                     const SizedBox(height: 10),
                     const Text('Focus Activity Progress:'),
-                    LinearProgressIndicator(value: focusActivityProgress / 100),
+                    LinearProgressIndicator(
+                      value: focusActivityProgress / 100,
+                      color: Colors.teal, // Use teal for focus activity
+                      backgroundColor: Colors.teal.shade100,
+                    ),
                     const SizedBox(height: 10),
+                    
                   ],
                 ),
               ),
               const SizedBox(height: 20),
 
               _buildSection(
-                title: 'Wellbeing Reminders',
+                title: 'Well being Reminders',
                 subtitle: 'Take care of yourself with these friendly reminders:',
                 icon: const Icon(Icons.favorite),
                 child: Column(
@@ -741,21 +927,32 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                         }
                       },
                       onSavePressed: () {
-                        if (callSomeoneDate != null && callSomeoneContact != null) {
+                        // If user entered a manual number, use it as the contact
+                        final bool hasManualNumber = callSomeonePhoneNumber != null && callSomeonePhoneNumber!.isNotEmpty;
+                        final bool hasPickedContact = callSomeoneContact != null && callSomeoneContact!.isNotEmpty;
+
+                        if (callSomeoneDate != null && (hasManualNumber || hasPickedContact)) {
+                          final String contactName = hasPickedContact
+                              ? callSomeoneContact!
+                              : "Manual Entry";
+                          final String contactDetail = hasManualNumber
+                              ? callSomeonePhoneNumber!
+                              : (callSomeoneContact ?? "");
+
                           _saveWellBeingReminder(
                             "Call Someone (Family/Friend)",
                             callSomeoneDate,
-                            callSomeoneContact,
+                            contactDetail,
                           );
-                          _scheduleNotification(
-                            title: "Call Reminder",
-                            body: "Time to call $callSomeoneContact",
-                            scheduledDate: callSomeoneDate!,
+                          MentalNotificationService.scheduleWellBeingReminder(
                             id: 1,
-                          );
+                            title: "Call reminder",
+                            body: "Time to call ${callSomeoneContact ?? callSomeonePhoneNumber ?? "your contact"}",
+    scheduledDate: callSomeoneDate!,
+  );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("Please set both date/time and contact before saving.")),
+                            const SnackBar(content: Text("Please set both date/time and contact or enter a number before saving.")),
                           );
                         }
                       },
@@ -819,11 +1016,11 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                             checkLoverDate,
                             checkLoverContact,
                           );
-                          _scheduleNotification(
+                          MentalNotificationService.scheduleWellBeingReminder(
+                            id: 2,
                             title: "Check on Spouse/Partner",
                             body: "Time to check on $checkLoverContact",
                             scheduledDate: checkLoverDate!,
-                            id: 2,
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -854,11 +1051,11 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
                             selfTreatDate,
                             selfTreatLocation,
                           );
-                          _scheduleNotification(
+                          MentalNotificationService.scheduleWellBeingReminder(
+                            id: 3,
                             title: "Treat Yourself",
                             body: "Go to $selfTreatLocation",
                             scheduledDate: selfTreatDate!,
-                            id: 3,
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(

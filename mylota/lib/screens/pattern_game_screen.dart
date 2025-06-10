@@ -55,35 +55,47 @@ class _PatternGameScreenState extends State<PatternGameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Pattern Game")),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text("Remember this pattern:"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: pattern.map((index) => Container(
-              width: 50,
-              height: 50,
-              margin: EdgeInsets.all(5),
-              color: colors[index],
-            )).toList(),
-          ),
-          Text("Tap the colors in the same order:"),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(colors.length, (index) =>
-                GestureDetector(
-                  onTap: () => _userSelect(index),
-                  child: Container(
-                    width: 50,
-                    height: 50,
-                    margin: EdgeInsets.all(5),
-                    color: colors[index],
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text("Remember this pattern:"),
+            const SizedBox(height: 10),
+            Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: pattern.map((index) => Container(
+                  width: 50,
+                  height: 50,
+                  color: colors[index],
+                )).toList(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text("Tap the colors in the same order:"),
+            const SizedBox(height: 10),
+            Center(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: List.generate(colors.length, (index) =>
+                  GestureDetector(
+                    onTap: () => _userSelect(index),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      color: colors[index],
+                    ),
                   ),
                 ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

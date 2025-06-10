@@ -4,7 +4,9 @@ import 'dart:math';
 import 'package:mylota/widgets/custom_button.dart';
 
 class PuzzleGame extends StatefulWidget {
-  const PuzzleGame({Key? key}) : super(key: key);
+  final void Function(int currentLevel, int totalLevels)? onLevelCompleted;
+
+  const PuzzleGame({Key? key, this.onLevelCompleted}) : super(key: key);
 
   @override
   _PuzzleGameState createState() => _PuzzleGameState();
@@ -14,6 +16,9 @@ class _PuzzleGameState extends State<PuzzleGame> {
   final int gridColumns = 4; // Number of columns
   final int gridRows = 3; // Number of rows
   late List<int> tiles;
+
+  int currentLevel = 1;
+  final int totalLevels = 10; // Example
 
   @override
   void initState() {
@@ -51,6 +56,19 @@ class _PuzzleGameState extends State<PuzzleGame> {
       if (tiles[i] != i + 1) return false;
     }
     return tiles.last == 0;
+  }
+
+  void _updateGameProgress(String gameName, int currentStep, int totalSteps) {
+    // Implement your progress update logic here
+    print(
+        'Game: $gameName, Current Step: $currentStep, Total Steps: $totalSteps');
+  }
+
+  void _onLevelComplete() {
+    if (widget.onLevelCompleted != null) {
+      widget.onLevelCompleted!(currentLevel, totalLevels);
+    }
+    // ...other logic...
   }
 
   @override
@@ -125,5 +143,23 @@ class _PuzzleGameState extends State<PuzzleGame> {
         ),
       ),
     );
+  }
+}
+
+class PuzzleGameWrapper extends StatelessWidget {
+  final void Function(int currentLevel, int totalLevels)? onLevelCompleted;
+
+  const PuzzleGameWrapper({Key? key, this.onLevelCompleted}) : super(key: key);
+
+  void _handleLevelComplete(int currentLevel, int totalLevels) {
+    if (onLevelCompleted != null) {
+      onLevelCompleted!(currentLevel, totalLevels);
+    }
+    // ...other logic...
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PuzzleGame();
   }
 }

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/custom_input_decorator.dart';
-import 'dart:math';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -14,13 +13,10 @@ class _ChallengePageState extends State<ChallengePage> {
   final TextEditingController _taskController = TextEditingController();
   List<String> userAnswers = [];
   int score = 0;
-  int patternLevel = 1;
-
-  // Move these inside the state class
   Map<String, List<String>> weeklyTasks = {};
   bool isLoadingTasks = true;
 
-  String? selectedDay;
+  String? selectedDateKey;
   String? selectedTask;
   Map<String, int> rememberedPerDay = {};
 
@@ -36,7 +32,7 @@ class _ChallengePageState extends State<ChallengePage> {
     });
     final doc = await FirebaseFirestore.instance
         .collection('to-do-lists')
-        .doc('weekly') // Adjust this to your Firestore structure
+        .doc('weekly')
         .get();
     if (doc.exists) {
       final data = doc.data()!;
@@ -52,14 +48,11 @@ class _ChallengePageState extends State<ChallengePage> {
     }
   }
 
-  // Add these variables for dropdowns and progress
-  // Helper to get tasks for the selected day
   List<String> get dayTasks {
-    if (selectedDay == null) return [];
-    return weeklyTasks[selectedDay!] ?? [];
+    if (selectedDateKey == null) return [];
+    return weeklyTasks[selectedDateKey!] ?? [];
   }
 
-  // Calculate progress as percentage of all tasks remembered
   int get progressPercent {
     final total = weeklyTasks.values.fold<int>(0, (sum, list) => sum + list.length);
     final remembered = rememberedPerDay.values.fold<int>(0, (sum, val) => sum + val);
@@ -80,13 +73,12 @@ class _ChallengePageState extends State<ChallengePage> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)], // Gradient
+              colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)],
             ),
           ),
         ),
         elevation: 5,
       ),
-
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -112,12 +104,12 @@ class _ChallengePageState extends State<ChallengePage> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-    launchEmail(
-      toEmail: 'mylota138@gmail.com',
-      subject: 'Help Request',
-      body: 'Hi, I need assistance with...',
-    );
-  },
+          launchEmail(
+            toEmail: 'mylota138@gmail.com',
+            subject: 'Help Request',
+            body: 'Hi, I need assistance with...',
+          );
+        },
         label: const Text("Need Help?"),
         icon: const Icon(Icons.help_outline),
         backgroundColor: const Color(0xFF66C3A7),
@@ -140,29 +132,58 @@ class _ChallengePageState extends State<ChallengePage> {
               "Remember Your Weekly Tasks",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            // Change to dropdown for week days
-            DropdownButtonFormField<String>(
-              value: selectedDay,
-              items: weekDaysWithDates.map((dayMap) {
-                return DropdownMenuItem(
-                  value: dayMap['value'],
-                  child: Text(dayMap['label']!),
+            // Calendar picker using customInputDecoration
+            GestureDetector(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                  lastDate: DateTime.now().add(const Duration(days: 30)),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF2A7F67),
+                          onPrimary: Colors.white,
+                          onSurface: Colors.black,
+                        ),
+                        textButtonTheme: TextButtonThemeData(
+                          style: TextButton.styleFrom(
+                            foregroundColor: Color(0xFF2A7F67),
+                          ),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
                 );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedDay = value;
-                  selectedTask = null;
-                });
+                if (picked != null) {
+                  setState(() {
+                    selectedDateKey =
+                        "${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+                    selectedTask = null;
+                  });
+                }
               },
-              decoration: customInputDecoration(
-                labelText: 'Select Day',
-                hintText: 'Choose a day of the week',
-                prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+              child: AbsorbPointer(
+                child: TextFormField(
+                  readOnly: true,
+                  decoration: customInputDecoration(
+                    labelText: 'Select Date',
+                    hintText: 'Choose a date',
+                    prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+                    suffixIcon: const Icon(Icons.arrow_drop_down, color: Colors.green),
+                  ),
+                  controller: TextEditingController(
+                    text: selectedDateKey != null
+                        ? _formattedDateLabel(selectedDateKey!)
+                        : '',
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 10),
-            // User enters task
             TextField(
               controller: _taskController,
               decoration: customInputDecoration(
@@ -180,11 +201,11 @@ class _ChallengePageState extends State<ChallengePage> {
             CustomPrimaryButton(
               label: "Submit Task",
               onPressed: () {
-                if (selectedDay != null && selectedDay!.isNotEmpty && selectedTask != null && selectedTask!.isNotEmpty) {
+                if (selectedDateKey != null && selectedDateKey!.isNotEmpty && selectedTask != null && selectedTask!.isNotEmpty) {
                   _checkTask();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Please select a day and enter a task before submitting.")),
+                    const SnackBar(content: Text("Please select a date and enter a task before submitting.")),
                   );
                 }
               },
@@ -193,11 +214,11 @@ class _ChallengePageState extends State<ChallengePage> {
               "Score: $score / ${weeklyTasks.values.expand((x) => x).length}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            if (selectedDay != null && weeklyTasks[selectedDay!] != null)
+            if (selectedDateKey != null && weeklyTasks[selectedDateKey!] != null)
               Padding(
                 padding: const EdgeInsets.only(top: 8.0),
                 child: Text(
-                  "Tasks for ${selectedDay!}: ${weeklyTasks[selectedDay!]!.join(', ')}",
+                  "Tasks for ${_formattedDateLabel(selectedDateKey!)}: ${weeklyTasks[selectedDateKey!]!.join(', ')}",
                   style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
               ),
@@ -208,28 +229,21 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   void _checkTask() {
-    if (selectedDay == null || selectedTask == null) return;
+    if (selectedDateKey == null || selectedTask == null) return;
 
-    // Normalize user input
-    final dayKey = selectedDay!.trim().toLowerCase();
+    final dateKey = selectedDateKey!;
     final userTask = selectedTask!.trim().toLowerCase();
 
-    // Find the matching day in weeklyTasks (case-insensitive)
-    final matchingDay = weeklyTasks.keys.firstWhere(
-      (k) => k.trim().toLowerCase() == dayKey,
-      orElse: () => '',
-    );
-    final taskGoalList = matchingDay.isNotEmpty ? weeklyTasks[matchingDay] : null;
+    final taskGoalList = weeklyTasks[dateKey];
 
-    // Compare user input with each task title (case-insensitive, trimmed)
     bool correct = taskGoalList != null &&
         taskGoalList.any((t) => t.trim().toLowerCase() == userTask);
 
     setState(() {
-      if (correct && !(userAnswers.contains("$matchingDay:$userTask"))) {
-        userAnswers.add("$matchingDay:$userTask");
+      if (correct && !(userAnswers.contains("$dateKey:$userTask"))) {
+        userAnswers.add("$dateKey:$userTask");
         score++;
-        rememberedPerDay[matchingDay] = (rememberedPerDay[matchingDay] ?? 0) + 1;
+        rememberedPerDay[dateKey] = (rememberedPerDay[dateKey] ?? 0) + 1;
         _showTrophyDialog();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Correct! Task remembered.")),
@@ -241,7 +255,7 @@ class _ChallengePageState extends State<ChallengePage> {
         );
       }
       // Reset fields after submit
-      selectedDay = null;
+      selectedDateKey = null;
       selectedTask = null;
       _taskController.clear();
     });
@@ -279,7 +293,6 @@ class _ChallengePageState extends State<ChallengePage> {
     );
   }
 
-  // Leaderboard Section
   Widget _buildLeaderboard() {
     return Card(
       color: const Color(0xFF2A7F67),
@@ -335,26 +348,36 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   void launchEmail({
-  required String toEmail,
-  String subject = '',
-  String body = '',
-}) async {
-  final Uri emailUri = Uri(
-    scheme: 'mailto',
-    path: toEmail,
-    queryParameters: {
-      'subject': subject,
-      'body': body,
-    },
-  );
+    required String toEmail,
+    String subject = '',
+    String body = '',
+  }) async {
+    final gmailUrl = Uri.parse(
+      "googlegmail://co?to=$toEmail&subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}"
+    );
+    final mailtoUrl = Uri(
+      scheme: 'mailto',
+      path: toEmail,
+      queryParameters: {
+        'subject': subject,
+        'body': body,
+      },
+    );
 
-  if (await canLaunchUrl(emailUri)) {
-    await launchUrl(emailUri);
-  } else {
-    throw 'Could not launch email client';
+    // Try to launch Gmail app
+    if (await canLaunchUrl(gmailUrl)) {
+      await launchUrl(gmailUrl);
+    } else if (await canLaunchUrl(mailtoUrl)) {
+      // Fallback to default mail client
+      await launchUrl(mailtoUrl);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No email app found. Please install or set up an email app.')),
+        );
+      }
+    }
   }
-}
-
 
   List<Map<String, String>> get weekDaysWithDates {
     final now = DateTime.now();
@@ -366,9 +389,10 @@ class _ChallengePageState extends State<ChallengePage> {
     return List.generate(7, (i) {
       final date = monday.add(Duration(days: i));
       final formatted = "${date.day.toString().padLeft(2, '0')} ${_monthName(date.month)}";
+      final dateKey = "${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
       return {
         'label': "${days[i]} ($formatted)",
-        'value': days[i],
+        'value': dateKey,
       };
     });
   }
@@ -379,5 +403,19 @@ class _ChallengePageState extends State<ChallengePage> {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month - 1];
+  }
+
+  String _formattedDateLabel(String dateKey) {
+    try {
+      final parts = dateKey.split('-');
+      final date = DateTime(
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
+      return "${date.day.toString().padLeft(2, '0')} ${_monthName(date.month)} ${date.year}";
+    } catch (_) {
+      return dateKey;
+    }
   }
 }

@@ -22,6 +22,7 @@ class _BoxBreathingAudioWidgetState extends State<BoxBreathingAudioWidget> {
       setState(() => isPlaying = false);
     } else {
       await _audioPlayer.play(AssetSource('audio/box_breathing.mp3'));
+      await _audioPlayer.setPlaybackRate(0.8); // Slow down to 0.5x
       setState(() => isPlaying = true);
     }
   }

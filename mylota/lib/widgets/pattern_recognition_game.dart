@@ -3,7 +3,9 @@ import 'dart:math';
 import 'custom_button.dart';
 
 class PatternRecognitionGame extends StatefulWidget {
-  const PatternRecognitionGame({Key? key}) : super(key: key);
+  final void Function(int currentLevel, int totalLevels)? onLevelCompleted;
+
+  const PatternRecognitionGame({Key? key, this.onLevelCompleted}) : super(key: key);
 
   @override
   _PatternRecognitionGameState createState() => _PatternRecognitionGameState();
@@ -14,6 +16,7 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
   late List<int> pattern; // The pattern to recognize
   late List<int> userInput; // User's input
   int currentLevel = 1; // Game level
+  final int totalLevels = 10; // Example
   bool isGameOver = false;
 
   @override
@@ -51,11 +54,19 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
 
       // If the user completes the pattern, move to the next level
       if (userInput.length == pattern.length) {
+        _onLevelComplete();
         currentLevel++;
         _generatePattern();
         userInput = [];
       }
     });
+  }
+
+  void _onLevelComplete() {
+    if (widget.onLevelCompleted != null) {
+      widget.onLevelCompleted!(currentLevel, totalLevels);
+    }
+    // ...other logic...
   }
 
   Widget _buildColorButton(int colorIndex, Color color) {
@@ -86,8 +97,8 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Description on how to play
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16.0),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 16.0),
               child: Text(
                 'How to play:\n\n'
                 '1. Memorize the sequence of colored squares shown at the top.\n'
@@ -152,6 +163,19 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
                 onPressed: _startNewGame,
               ),
             ),
+            const SizedBox(height: 20),
+            if (!isGameOver)
+              LinearProgressIndicator(
+                value: currentLevel / 5, // Assuming 5 levels total
+                backgroundColor: Colors.grey[300],
+                color: Colors.teal,
+              ),
+            const SizedBox(height: 10),
+            if (!isGameOver)
+              Text(
+                'Level $currentLevel',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
           ],
         ),
       ),
@@ -171,5 +195,18 @@ class _PatternRecognitionGameState extends State<PatternRecognitionGame> {
       default:
         return Colors.grey;
     }
+  }
+
+  void _updateGameProgress(String gameName, int currentStep, int totalSteps) {
+    // Implement your game progress update logic here
+    // This could involve updating a database, sending data to a server, etc.
+    print(
+        'Game: $gameName, Current Step: $currentStep, Total Steps: $totalSteps');
+  }
+
+  void _handleLevelComplete(int currentLevel, int totalLevels) {
+    // Implement your level completion logic here
+    // This could involve updating scores, unlocking new levels, etc.
+    print('Level $currentLevel completed!');
   }
 }

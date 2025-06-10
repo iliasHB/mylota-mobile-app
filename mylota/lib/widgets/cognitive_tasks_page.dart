@@ -4,7 +4,9 @@ import 'dart:async';
 import 'package:mylota/widgets/custom_button.dart';
 
 class CognitiveTasksPage extends StatefulWidget {
-  const CognitiveTasksPage({Key? key}) : super(key: key);
+  final void Function(int currentLevel, int totalLevels)? onLevelCompleted;
+
+  const CognitiveTasksPage({Key? key, this.onLevelCompleted}) : super(key: key);
 
   @override
   _CognitiveTasksPageState createState() => _CognitiveTasksPageState();
@@ -27,6 +29,7 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
   bool isGameOver = false;
   Timer? timer;
   int timeLeft = 90; // 90 seconds
+  double patternRecognitionProgress = 100.0; // Progress for pattern recognition
 
   @override
   void initState() {
@@ -43,9 +46,16 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
         } else {
           isGameOver = true;
           timer.cancel();
+          _notifyLevelCompleted(); // <-- Notify parent
         }
       });
     });
+  }
+
+  void _notifyLevelCompleted() {
+    if (widget.onLevelCompleted != null) {
+      widget.onLevelCompleted!(currentWordIndex, words.length);
+    }
   }
 
   void _categorizeWord(String category) {
@@ -54,9 +64,11 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
     setState(() {
       categories[category]?.add(words[currentWordIndex]);
       currentWordIndex++;
+      patternRecognitionProgress -= (100 / words.length); // Decrease progress
       if (currentWordIndex >= words.length) {
         isGameOver = true;
         timer?.cancel();
+        _notifyLevelCompleted(); // <-- Notify parent
       }
     });
   }
@@ -123,6 +135,9 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
                       );
                     }).toList(),
                   ),
+                  const SizedBox(height: 20),
+                  // Linear progress indicator for pattern recognition
+                  LinearProgressIndicator(value: patternRecognitionProgress / 100),
                 ],
               ),
       ),
@@ -161,7 +176,7 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
           );
         }).toList(),
         const SizedBox(height: 20),
-        Center( // Center the button
+        Center(
           child: CustomPrimaryButton(
             label: 'Play Again',
             onPressed: () {
@@ -182,7 +197,29 @@ class _CognitiveTasksPageState extends State<CognitiveTasksPage> {
       currentWordIndex = 0;
       isGameOver = false;
       timeLeft = 90;
+      patternRecognitionProgress = 100.0; // Reset progress
       _startTimer();
     });
   }
+}
+
+class CognitiveTasksGame extends StatelessWidget {
+  final void Function(int currentLevel, int totalLevels)? onLevelCompleted;
+
+  const CognitiveTasksGame({Key? key, this.onLevelCompleted}) : super(key: key);
+
+  void _handleLevelComplete(int currentLevel, int totalLevels) {
+    if (onLevelCompleted != null) {
+      onLevelCompleted!(currentLevel, totalLevels);
+    }
+    // ...other logic...
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+
+  
 }

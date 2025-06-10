@@ -129,7 +129,7 @@ class _ToDoListState extends State<ToDoList> {
               return null;
             },
           ), */
-          const SizedBox(height: 10),
+          /* const SizedBox(height: 10),
           tasks.isEmpty
               ? const Center(child: Text('No tasks added yet.'))
               : Expanded(
@@ -148,7 +148,7 @@ class _ToDoListState extends State<ToDoList> {
                       );
                     },
                   ),
-                ),
+                ), */
           const SizedBox(height: 20),
           Center(
               child: isLoading

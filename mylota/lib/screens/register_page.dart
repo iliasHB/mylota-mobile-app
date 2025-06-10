@@ -144,7 +144,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Last name can not be empty";
                     }
                     return null;
                   },
@@ -252,8 +252,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     prefixIcon: const Icon(Icons.call, color: Colors.green),
                   ),
                   validator: (value) {
+
                     if (value == null || value.isEmpty) {
                       return 'Phone number cannot be empty';
+
                     }
                     return null;
                   },
@@ -269,7 +271,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "Address can not be empty";
+                      return "email can not be empty";
                     }
                     return null;
                   },
@@ -286,7 +288,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Password can not be empty";
                     }
                     return null;
                   },
@@ -297,13 +299,13 @@ class _RegisterPageState extends State<RegisterPage> {
                   controller: retypePwdController,
                   obscureText: true,
                   decoration: customInputDecoration(
-                    labelText: 'confirm password',
+                    labelText: 'Confirm password',
                     hintText: '*******',
                     prefixIcon: const Icon(Icons.lock, color: Colors.green),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "Confirm password can not be empty";
                     }
                     return null;
                   },
@@ -345,7 +347,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         if (selectedPlan == null) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text(
-                                "country or plan not selected",
+                                "Subscription plan not selected",
                                 style: AppStyle.cardfooter,
                               )));
                         }
@@ -398,7 +400,6 @@ class _RegisterPageState extends State<RegisterPage> {
           contactController.text.trim()
       );
     }
-
   }
 }
 
