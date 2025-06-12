@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:mylota/controller/transactions_controller.dart';
 
 
 Future<PaystackResponse?> verifyPaystackTransaction(String reference) async {
@@ -16,7 +17,12 @@ Future<PaystackResponse?> verifyPaystackTransaction(String reference) async {
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final jsonData = jsonDecode(response.body);
-      return PaystackResponse.fromJson(jsonData);
+      final paystackResponse = PaystackResponse.fromJson(jsonData);
+
+      // Save into Firestore
+      await TransactionController.saveTransactions(paystackResponse.data);
+
+      return paystackResponse;
     } else {
       print("Failed: ${response.statusCode} - ${response.body}");
       return null;
