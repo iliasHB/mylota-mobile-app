@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../core/usecase/provider/water_intake_provider.dart';
 import '../utils/pref_util.dart';
+import '../widgets/subscription_alert.dart';
 
 class WaterInTakeController {
   static Future<void> saveWaterIntake(
@@ -21,38 +22,72 @@ class WaterInTakeController {
         onStopLoading();
         return;
       }
-      final today = DateTime.now();
-      final todayStr =
-          "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-      String formattedTime = reminderPeriod!.format(context);
-      bool acknowledged = false;
-      await FirebaseFirestore.instance
-          .collection('water-intake-schedule')
-          .doc(user.uid) // Save goal under user's UID
-          .set({
-        'daily-water-intake': '$waterIntake',
-        "reminder-time": formattedTime, // or HH:mm
-        "acknowledged": acknowledged,
-        'createdAt': todayStr,
-        // 'createdAt': DateTime.now().toIso8601String(),
-      });
 
-      // PrefUtils prefUtils = PrefUtils();
-      // await prefUtils.setInt('exercise_minutes', _exerciseGoal.toInt());
-      // await prefUtils.setExerciseStr('exercise_name', selectedItem!);
-      //
-      // /// Start background service
-      // final service = FlutterBackgroundService();
-      // await service.startService();
+      DocumentReference userDoc =
+      FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-      Provider.of<WaterReminderProvider>(context, listen: false)
-          .startDailyWaterIntakeTimer(waterIntake.toString(),
+      DocumentSnapshot docSnap = await userDoc.get();
+
+      Map<String, dynamic> sub = {};
+      // Map<String, dynamic> email = {};
+      if (docSnap.exists && docSnap.data() != null) {
+        Map<String, dynamic> data = docSnap.data() as Map<String, dynamic>;
+        sub = Map<String, dynamic>.from(data['subscription'] ?? {});
+        // email = data['email'] ?? {});
+        // if (sub.containsKey('expiredAt')) {
+        // Parse expiredAt from String to DateTime
+        DateTime expiredAt = DateTime.parse(sub['expiredAt']);
+        DateTime now = DateTime.now();
+
+        // Compare dates
+        if (now.isAfter(expiredAt)) {
+          onStopLoading();
+          // subscription expired
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) =>
+                      SubscriptionAlert(
+                        // plan: sub['type'],
+                        // amount: sub['amount'],
+                          email: data['email']
+                      )));
+        } else {
+          final today = DateTime.now();
+          final todayStr =
+              "${today.year}-${today.month.toString().padLeft(2, '0')}-${today
+              .day.toString().padLeft(2, '0')}";
+          String formattedTime = reminderPeriod!.format(context);
+          bool acknowledged = false;
+          await FirebaseFirestore.instance
+              .collection('water-intake-schedule')
+              .doc(user.uid) // Save goal under user's UID
+              .set({
+            'daily-water-intake': '$waterIntake',
+            "reminder-time": formattedTime, // or HH:mm
+            "acknowledged": acknowledged,
+            'createdAt': todayStr,
+            // 'createdAt': DateTime.now().toIso8601String(),
+          });
+
+          // PrefUtils prefUtils = PrefUtils();
+          // await prefUtils.setInt('exercise_minutes', _exerciseGoal.toInt());
+          // await prefUtils.setExerciseStr('exercise_name', selectedItem!);
+          //
+          // /// Start background service
+          // final service = FlutterBackgroundService();
+          // await service.startService();
+
+          Provider.of<WaterReminderProvider>(context, listen: false)
+              .startDailyWaterIntakeTimer(waterIntake.toString(),
               reminderPeriod.format(context), acknowledged);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Schedule saved successfully!')),
-      );
-      onStopLoading();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Schedule saved successfully!')),
+          );
+          onStopLoading();
+        }
+      }
     } catch (e) {
       onStopLoading();
       print("Error saving goal: $e");

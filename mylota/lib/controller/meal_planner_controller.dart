@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:mylota/core/usecase/provider/meal_planner_provider.dart';
 import 'package:provider/provider.dart';
 
+import '../widgets/subscription_alert.dart';
+
 class MealPlannerController {
   static Future<void> saveMeals({
     required BuildContext context,
@@ -37,76 +39,110 @@ class MealPlannerController {
       }
 
       DocumentReference userDoc =
+      FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      DocumentSnapshot docSnap = await userDoc.get();
+
+      Map<String, dynamic> sub = {};
+      // Map<String, dynamic> email = {};
+      if (docSnap.exists && docSnap.data() != null) {
+        Map<String, dynamic> data = docSnap.data() as Map<String, dynamic>;
+        sub = Map<String, dynamic>.from(data['subscription'] ?? {});
+        // email = data['email'] ?? {});
+        // if (sub.containsKey('expiredAt')) {
+        // Parse expiredAt from String to DateTime
+        DateTime expiredAt = DateTime.parse(sub['expiredAt']);
+        DateTime now = DateTime.now();
+
+        // Compare dates
+        if (now.isAfter(expiredAt)) {
+          onStopLoading();
+          // subscription expired
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) =>
+                      SubscriptionAlert(
+                        // plan: sub['type'],
+                        // amount: sub['amount'],
+                          email: data['email']
+                      )));
+        } else {
+          DocumentReference userDoc =
           FirebaseFirestore.instance.collection('meal-planner').doc(user.uid);
 
-      DocumentSnapshot docSnapshot = await userDoc.get();
-      Map<String, dynamic> mealData = {};
+          DocumentSnapshot docSnapshot = await userDoc.get();
+          Map<String, dynamic> mealData = {};
 
-      if (docSnapshot.exists && docSnapshot.data() != null) {
-        mealData = docSnapshot.data() as Map<String, dynamic>;
+          if (docSnapshot.exists && docSnapshot.data() != null) {
+            mealData = docSnapshot.data() as Map<String, dynamic>;
+          }
+
+          Map<String, dynamic> mealsByDay = mealData[selectedDayCategory] ?? {};
+
+          // Check if meal already exists for the category (e.g., Breakfast, Lunch, etc.)
+          if (mealsByDay.containsKey(selectedCategory)) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Meal already exists for this time. Updating...'),
+                backgroundColor: Colors.orange,
+                duration: Duration(seconds: 2),
+              ),
+            );
+          }
+          final today = DateTime.now();
+          final todayStr =
+              "${today.year}-${today.month.toString().padLeft(2, '0')}-${today
+              .day.toString().padLeft(2, '0')}";
+          // String formattedTime = reminderPeriod!.format(context);
+          bool acknowledged = false;
+
+          // String timeString = '${_mealTime!.hour}:${_mealTime!.minute}';
+          String timeString = mealTime!.format(context);
+
+          Map<String, dynamic> newMeal = {
+            'meal-time': timeString,
+            'name': mealController,
+            'vegetable1': selectedItem,
+            'vegetable2': selectedItem2,
+            'reminder-date': todayStr,
+            'acknowledgment': acknowledged,
+            'createdAt': today.toIso8601String(),
+          };
+
+          // Set/Update the meal directly as an object
+          mealsByDay[selectedCategory] = newMeal;
+          mealData[selectedDayCategory] = mealsByDay;
+
+          await userDoc.set(mealData, SetOptions(merge: true));
+
+          // setState(() {
+          //   mealController.clear();
+          //   selectedItem = dropdownItems.isNotEmpty ? dropdownItems.first : null;
+          //   selectedItem2 =
+          //       dropdownItemsVeg2.isNotEmpty ? dropdownItemsVeg2.first : null;
+          // });
+
+          Provider.of<MealPlannerProvider>(context, listen: false)
+              .startMealPlanner(
+              mealController,
+              selectedCategory,
+              selectedDayCategory,
+              mealTime.format(context),
+              selectedItem,
+              selectedItem2,
+              acknowledged);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Meal saved successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          onStopLoading();
+        }
       }
-
-      Map<String, dynamic> mealsByDay = mealData[selectedDayCategory] ?? {};
-
-      // Check if meal already exists for the category (e.g., Breakfast, Lunch, etc.)
-      if (mealsByDay.containsKey(selectedCategory)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Meal already exists for this time. Updating...'),
-            backgroundColor: Colors.orange,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-      final today = DateTime.now();
-      final todayStr =
-          "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-      // String formattedTime = reminderPeriod!.format(context);
-      bool acknowledged = false;
-
-      // String timeString = '${_mealTime!.hour}:${_mealTime!.minute}';
-      String timeString = mealTime!.format(context);
-
-      Map<String, dynamic> newMeal = {
-        'meal-time': timeString,
-        'name': mealController,
-        'vegetable1': selectedItem,
-        'vegetable2': selectedItem2,
-        'reminder-date': todayStr,
-        'acknowledgment': acknowledged,
-        'createdAt': today.toIso8601String(),
-      };
-
-      // Set/Update the meal directly as an object
-      mealsByDay[selectedCategory] = newMeal;
-      mealData[selectedDayCategory] = mealsByDay;
-
-      await userDoc.set(mealData, SetOptions(merge: true));
-
-      // setState(() {
-      //   mealController.clear();
-      //   selectedItem = dropdownItems.isNotEmpty ? dropdownItems.first : null;
-      //   selectedItem2 =
-      //       dropdownItemsVeg2.isNotEmpty ? dropdownItemsVeg2.first : null;
-      // });
-
-      Provider.of<MealPlannerProvider>(context, listen: false).startMealPlanner(
-          mealController,
-          selectedCategory,
-          selectedDayCategory,
-          mealTime.format(context),
-          selectedItem,
-          selectedItem2,
-          acknowledged);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Meal saved successfully!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
-      onStopLoading();
     } catch (e) {
       onStopLoading();
       ScaffoldMessenger.of(context).showSnackBar(
