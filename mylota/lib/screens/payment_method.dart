@@ -37,8 +37,8 @@ class PaymentGateway extends StatefulWidget {
   final String email,
       price,
       description,
-      type,
-      contact,
+      type;
+  final String? contact,
       password,
       firstname,
       lastname,
@@ -50,12 +50,12 @@ class PaymentGateway extends StatefulWidget {
       required this.price,
       required this.description,
       required this.type,
-      required this.password,
-      required this.firstname,
-      required this.lastname,
-      required this.country,
-      required this.address,
-      required this.contact});
+        this.password,
+        this.firstname,
+        this.lastname,
+        this.country,
+        this.address,
+        this.contact});
 
   @override
   State<PaymentGateway> createState() => _PaymentGatewayState();
@@ -181,13 +181,13 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                             initiatePayment(
                                 widget.email,
                                 widget.price,
-                                widget.contact,
-                                widget.password,
-                                widget.country,
-                                widget.address,
+                                widget.contact!,
+                                widget.password!,
+                                widget.country!,
+                                widget.address!,
                                 widget.type,
-                                widget.firstname,
-                                widget.lastname);
+                                widget.firstname!,
+                                widget.lastname!);
                             // / if (_formKey.currentState?.validate() ?? false) {
                             // final loginReqEntity = InitiatePaymentReqEntity(
                             //   email: widget.email,
@@ -293,7 +293,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
       String firstname,
       String lastname) async {
     final result =
-        await createPaystackTransaction('user@example.com', '100000');
+        await createPaystackTransaction(email, amount);
     if (result != null) {
       final url = result.data.authorization_url;
       print("Redirect user to Paystack URL: $url");

@@ -36,13 +36,22 @@ class RegisterController {
         password: password,
       );
 
-      // Create the subscription object
+      // Calculate expiredAt based on the subscription amount
+      DateTime expiredAt;
+      if (subscriptionAmount == "0.00") {
+        expiredAt = DateTime.now().add(const Duration(days: 7));
+      } else {
+        // For 1 month, add 30 days (or use DateTime extension for better accuracy if you want)
+        expiredAt = DateTime.now().add(const Duration(days: 30));
+      }
+
+     // Create the subscription object
       final subscriptionData = {
-        'type':
-            subscriptionType, // assuming `subscription` is the selected type like "Basic"
+        'type': subscriptionType, // assuming `subscription` is the selected type like "Basic"
         'amount': subscriptionAmount,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
+        'createdAt': DateTime.now().toIso8601String(),
+        'expiredAt': expiredAt.toIso8601String(),
+        'updatedAt': DateTime.now().toIso8601String(),
       };
 
       // Store user details in Firestore
@@ -59,7 +68,7 @@ class RegisterController {
         'address': address,
         'uid': userCredential.user!.uid,
         'contact': contact,
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': DateTime.now().toIso8601String(),//FieldValue.serverTimestamp(),
       });
       SnackBar(
         content:

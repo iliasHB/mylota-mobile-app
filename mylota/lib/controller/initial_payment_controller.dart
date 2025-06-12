@@ -5,6 +5,11 @@ import 'package:http/http.dart' as http;
 
 Future<PaystackResponse?> createPaystackTransaction(String email, String amount) async {
   try {
+    String priceWithSymbol = amount;
+    String cleanedPrice = priceWithSymbol.replaceAll(RegExp(r'[^\d.]'), '');
+    double amountDouble = double.parse(cleanedPrice);
+    int amountInMinorUnit = (amountDouble * 100).round();
+    print("amount: $amountInMinorUnit");
     final response = await http.post(
       Uri.parse('https://api.paystack.co/transaction/initialize'),
       headers: {
@@ -13,7 +18,7 @@ Future<PaystackResponse?> createPaystackTransaction(String email, String amount)
       },
       body: jsonEncode({
         'email': email,
-        'amount': amount, // Must be in kobox
+        'amount': amountInMinorUnit, // Must be in kobox
       }),
     );
 

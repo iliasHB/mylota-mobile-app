@@ -2,6 +2,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mylota/screens/login_page.dart';
+
+import '../screens/main_screen.dart';
 
 
 class ForgetPwdController {
@@ -30,20 +33,20 @@ class ForgetPwdController {
 
         onStopLoading();
 
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => MainScreen()),
-        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
       } else {
         onStopLoading();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User does not exist')),
+          const SnackBar(content: Text('User does not exist')),
         );
       }
     } catch (e) {
       onStopLoading();
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error logging in: connection unreachable')),
+        const SnackBar(content: Text('Error logging in: connection unreachable')),
       );
       print("Error: $e");
     }

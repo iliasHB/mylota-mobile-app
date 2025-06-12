@@ -55,8 +55,7 @@ class TodoController {
           // final todayStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
           final time = newTask['reminder-date'].toString().split(' ').last;
           final reminderTime = time.toString().split('.').first;
-          final reminderDate =
-              newTask['reminder-date'].toString().split(' ').first;
+          final reminderDate = newTask['reminder-date'].toString().split(' ').first;
           bool acknowledged = false;
           existingTasks.add({
             'reminder-date': reminderDate, // Default if null,

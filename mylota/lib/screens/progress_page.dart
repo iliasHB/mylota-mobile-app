@@ -8,6 +8,7 @@ import 'package:mylota/utils/styles.dart';
 import 'package:provider/provider.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
+import '../widgets/details_item.dart';
 import '../widgets/more_meal_schedule.dart';
 import '../widgets/more_todos.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -253,13 +254,12 @@ class _ProgressPageState extends State<ProgressPage> {
                             ),
                             StreamBuilder(
                               stream: FirebaseFirestore.instance
-                                  .collection('to-do-goals')
+                                  .collection('todo-goals')
                                   .doc(FirebaseAuth.instance.currentUser?.uid)
                                   .snapshots(),
                               builder: (context,
                                   AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                if (!snapshot.hasData ||
-                                    !snapshot.data!.exists) {
+                                if (!snapshot.hasData || !snapshot.data!.exists) {
                                   return const Center(
                                       child: Text("No tasks available"));
                                 }
@@ -286,11 +286,10 @@ class _ProgressPageState extends State<ProgressPage> {
                                       var task = tasks[index];
                                       return Column(
                                         children: [
-                                          _DetailItem(
+                                          DetailItem(
                                               title: task['title'].toString(),
                                               desc: task['description'],
-                                              period: task['period'] ??
-                                                  "No period"),
+                                              period: task['period'] ?? "No period"),
                                           const Divider(),
                                         ],
                                       );
@@ -428,8 +427,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                   .snapshots(),
                               builder: (context,
                                   AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                if (!snapshot.hasData ||
-                                    !snapshot.data!.exists) {
+                                if (!snapshot.hasData || !snapshot.data!.exists) {
                                   return Center(
                                     child: Text(
                                       "No meals available",
@@ -915,7 +913,7 @@ class _ProgressPageState extends State<ProgressPage> {
 Widget _buildMealItem(Map<String, dynamic> meal) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4.0),
-    child: _DetailItem(
+    child: DetailItem(
       title: meal['name']?.toString() ?? "No name",
       desc: '${meal['vegetable1']?.toString() ?? "No vegetable 1"}, '
           '${meal['vegetable1']?.toString() ?? "No vegetable 2"}',
@@ -924,49 +922,4 @@ Widget _buildMealItem(Map<String, dynamic> meal) {
   );
 }
 
-class _DetailItem extends StatelessWidget {
-  final String title;
-  final String desc;
-  final String period;
 
-  const _DetailItem({
-    super.key,
-    required this.title,
-    required this.desc,
-    required this.period,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title, style: AppStyle.cardSubtitle.copyWith(fontSize: 14)),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.access_time,
-                    size: 14,
-                  ),
-                  const SizedBox(
-                    width: 2,
-                  ),
-                  Text(period,
-                      style: AppStyle.cardfooter
-                          .copyWith(fontSize: 12, fontStyle: FontStyle.italic)),
-                ],
-              ),
-            ],
-          ),
-          Text(desc, style: AppStyle.cardfooter.copyWith(fontSize: 12)),
-        ],
-      ),
-    );
-  }
-}

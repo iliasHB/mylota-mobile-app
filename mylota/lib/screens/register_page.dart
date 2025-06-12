@@ -370,7 +370,8 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void register() {
-    if (selectedPlan!['Type'] != 'Trial') {
+
+    if (!selectedPlan!['Type'].toString().contains('Trial')) {
       Navigator.push(context, MaterialPageRoute(builder: (_)
       => PaymentGateway(
           email: emailController.text.trim(),
@@ -390,13 +391,13 @@ class _RegisterPageState extends State<RegisterPage> {
           pwdController.text.trim(),
           firstnameController.text.trim(),
           lastnameController.text.trim(),
-          selectedPlan!['type'],
+          selectedPlan!['Type'],
           country!,
           addressController.text.trim(),
           onStartLoading: _startLoading,
           onStopLoading: _stopLoading,
           context: context,
-          selectedPlan!['amount'],
+          selectedPlan!['Amount'],
           contactController.text.trim()
       );
     }
