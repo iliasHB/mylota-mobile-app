@@ -45,7 +45,7 @@ class LoginController {
       } else {
         onStopLoading();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User does not exist')),
+          const SnackBar(content: Text('User does not exist')),
         );
       }
     } catch (e) {

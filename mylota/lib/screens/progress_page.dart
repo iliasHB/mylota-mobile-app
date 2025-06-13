@@ -8,6 +8,7 @@ import 'package:mylota/utils/styles.dart';
 import 'package:provider/provider.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
+import '../widgets/appBar_widget.dart';
 import '../widgets/details_item.dart';
 import '../widgets/more_meal_schedule.dart';
 import '../widgets/more_todos.dart';
@@ -96,22 +97,7 @@ class _ProgressPageState extends State<ProgressPage> {
     double screenWidth = MediaQuery.of(context).size.width; // Get screen width
     // final isExercise = context.watch<ExerciseTimerProvider>().remainingTime;
     return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Your Progress',
-            style: AppStyle.cardTitle,
-          ),
-          flexibleSpace: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)],
-              ),
-            ),
-          ),
-          elevation: 5,
-        ),
+        appBar: appBar(context: context, title: "Your Progress"),
         body: Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

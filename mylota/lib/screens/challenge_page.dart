@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mylota/widgets/appBar_widget.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/custom_input_decorator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -63,22 +64,23 @@ class _ChallengePageState extends State<ChallengePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "Weekly Challenge",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)],
-            ),
-          ),
-        ),
-        elevation: 5,
-      ),
+      appBar: appBar(context: context, title: "Weekly Challenge"),
+      // AppBar(
+      //   title: const Text(
+      //     "Weekly Challenge",
+      //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.white),
+      //   ),
+      //   flexibleSpace: Container(
+      //     decoration: const BoxDecoration(
+      //       gradient: LinearGradient(
+      //         begin: Alignment.topLeft,
+      //         end: Alignment.bottomRight,
+      //         colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)],
+      //       ),
+      //     ),
+      //   ),
+      //   elevation: 5,
+      // ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -102,18 +104,18 @@ class _ChallengePageState extends State<ChallengePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          launchEmail(
-            toEmail: 'mylota138@gmail.com',
-            subject: 'Help Request',
-            body: 'Hi, I need assistance with...',
-          );
-        },
-        label: const Text("Need Help?"),
-        icon: const Icon(Icons.help_outline),
-        backgroundColor: const Color(0xFF66C3A7),
-      ),
+      // floatingActionButton: FloatingActionButton.extended(
+      //   onPressed: () {
+      //     launchEmail(
+      //       toEmail: 'mylota138@gmail.com',
+      //       subject: 'Help Request',
+      //       body: 'Hi, I need assistance with...',
+      //     );
+      //   },
+      //   label: const Text("Need Help?"),
+      //   icon: const Icon(Icons.help_outline),
+      //   backgroundColor: const Color(0xFF66C3A7),
+      // ),
     );
   }
 

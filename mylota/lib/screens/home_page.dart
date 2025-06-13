@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mylota/widgets/appBar_widget.dart';
 import '../utils/styles.dart';
 import '../widgets/exercise_goal.dart';
 import '../widgets/sleep_goal.dart';
@@ -13,22 +14,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Wellness Planner',
-          style: AppStyle.cardTitle
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)], // Gradient
-            ),
-          ),
-        ),
-        elevation: 5,
-      ),
+      appBar: appBar(context: context, title: 'Wellness Planner'),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/task_service.dart';
 import '../models/task.dart';
+import '../widgets/appBar_widget.dart';
 
 class MemoryTestScreen extends StatefulWidget {
   @override
@@ -35,7 +36,7 @@ class _MemoryTestScreenState extends State<MemoryTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Memory Test")),
+      appBar: appBar(context: context, title: 'Memory Test'),
       body: Column(
         children: [
           TextField(

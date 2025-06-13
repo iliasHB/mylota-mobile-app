@@ -6,6 +6,7 @@ import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/pattern_recognition_game.dart';
 import 'package:mylota/widgets/puzzle_game.dart';
 import 'package:mylota/widgets/cognitive_tasks_page.dart';
+import '../widgets/appBar_widget.dart';
 import '../widgets/custom_input_decorator.dart';
 import 'package:mylota/widgets/mindfulness_activities_widget.dart';
 import 'package:flutter_native_contact_picker/flutter_native_contact_picker.dart';
@@ -450,22 +451,23 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Mental Stimulation',
-          style: AppStyle.cardTitle
-        ),
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)], // Gradient
-            ),
-          ),
-        ),
-        elevation: 5,
-      ),
+      appBar: appBar(context: context, title: "Mental Stimulation"),
+      // AppBar(
+      //   title: Text(
+      //     'Mental Stimulation',
+      //     style: AppStyle.cardTitle
+      //   ),
+      //   flexibleSpace: Container(
+      //     decoration: const BoxDecoration(
+      //       gradient: LinearGradient(
+      //         begin: Alignment.topLeft,
+      //         end: Alignment.bottomRight,
+      //         colors: [Color(0xFF66C3A7), Color(0xFF2A7F67)], // Gradient
+      //       ),
+      //     ),
+      //   ),
+      //   elevation: 5,
+      // ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

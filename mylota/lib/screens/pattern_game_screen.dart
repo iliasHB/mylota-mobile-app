@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../widgets/appBar_widget.dart';
+
 class PatternGameScreen extends StatefulWidget {
   @override
   _PatternGameScreenState createState() => _PatternGameScreenState();
@@ -54,7 +56,8 @@ class _PatternGameScreenState extends State<PatternGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Pattern Game")),
+      appBar: appBar(context: context, title: 'Pattern Game'),
+      // AppBar(title: Text("Pattern Game")),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
