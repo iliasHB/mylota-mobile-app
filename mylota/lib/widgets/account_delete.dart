@@ -35,25 +35,30 @@ class AccountDelete extends StatelessWidget {
               'Account Delete',
               style: AppStyle.cardTitle.copyWith(fontSize: 20),
             ),
-            const SizedBox(height: 20,),
-            Text(
-              'Your current subscription has expired. '
-                  'To continue enjoying our services, '
-                  'please renew your subscription or upgrade to a new plan.',
-              textAlign: TextAlign.center,
-              style: AppStyle.cardfooter.copyWith(fontSize: 18, fontWeight: FontWeight.w200),
+            const SizedBox(
+              height: 20,
             ),
-            const SizedBox(height: 20,),
+            Text(
+              'We are sorry to see you go. Deleting your account is permanent and cannot be undone. '
+                  'All your data, including your profile, preferences, and transaction history, will be permanently removed from our system. Are you sure you want to proceed?',
+              textAlign: TextAlign.center,
+              style: AppStyle.cardfooter
+                  .copyWith(fontSize: 18, fontWeight: FontWeight.w200),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Expanded(
-                  child: CustomPrimaryButton(
-                      label: 'Continue',
-                      onPressed: () {}),
+                  child:
+                      CustomPrimaryButton(label: 'Continue', onPressed: () {}),
                 ),
-                const SizedBox(width: 20,),
+                const SizedBox(
+                  width: 20,
+                ),
                 Expanded(
                   child: CustomSecondaryButton(
                       label: 'Go Back',
@@ -61,7 +66,6 @@ class AccountDelete extends StatelessWidget {
                         Navigator.pop(context);
                       }),
                 ),
-
               ],
             ),
           ],

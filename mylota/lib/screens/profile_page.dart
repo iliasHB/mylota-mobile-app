@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../controller/forget_password_controller.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
+import 'login_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -394,7 +395,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 ),
                                 const Spacer(),
                                 IconButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      logout();
+                                    },
                                     icon: const Icon(Icons.arrow_right_alt))
                               ],
                             ),
@@ -503,9 +506,22 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
+
+    // After logout, navigate to login or welcome screen
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
+  }
+
+
   void _forgetPassword() {
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email ?? "";
     ForgetPwdController.resetPwd(
-      email: "", //_emailController.text.trim(),
+      email: email, //_emailController.text.trim(),
       context: context,
       onStartLoading: _startLoading,
       onStopLoading: _stopLoading,
