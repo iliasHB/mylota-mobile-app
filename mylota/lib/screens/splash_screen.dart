@@ -1,5 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mylota/screens/login_page.dart';
+import '../utils/pref_util.dart';
+import 'home_page.dart';
 import 'main_screen.dart'; // Replace with the home page of your app.
 
 class SplashScreen extends StatefulWidget {
@@ -13,13 +16,44 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     // Navigate to the main screen after 3 seconds
-    Future.delayed(Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     });
+    // checkRememberMe();
   }
+
+  // void checkRememberMe() async {
+  //   final remember = await _loadRememberMe();
+  //   if (remember != null || remember.isNotEmpty) {
+  //     User? user = FirebaseAuth.instance.currentUser;
+  //     if (user != null) {
+  //       // User still logged in — navigate to home
+  //       Navigator.pushReplacement(
+  //           context, MaterialPageRoute(builder: (_) => HomePage()));
+  //     }
+  //   } else {
+  //     // Navigate to the main screen after 3 seconds
+  //     Future.delayed(const Duration(seconds: 3), () {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => LoginPage()),
+  //       );
+  //     });
+  //   }
+  // }
+  // // Future<bool> getRememberMe() async {
+  // //   final prefs = await SharedPreferences.getInstance();
+  // //   return prefs.getBool('remember_me') ?? false;
+  // // }
+  //
+  // Future<String> _loadRememberMe() async {
+  //   PrefUtils prefUtils = PrefUtils();
+  //   String rememberedEmail = await prefUtils.getStr("rememberMe");
+  //   return rememberedEmail;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +63,10 @@ class _SplashScreenState extends State<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)], // Background Gradient
+            colors: [
+              Color(0xFFE0F2F1),
+              Color(0xFFB2DFDB)
+            ], // Background Gradient
           ),
         ),
         child: Center(
@@ -62,7 +99,8 @@ class _SplashScreenState extends State<SplashScreen> {
                 'Your Journey to Wellness Starts Here',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.black.withOpacity(0.8), // Changed for better visibility
+                  color: Colors.black
+                      .withOpacity(0.8), // Changed for better visibility
                   fontStyle: FontStyle.italic,
                 ),
               ),

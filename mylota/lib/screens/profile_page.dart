@@ -43,7 +43,6 @@ class _ProfilePageState extends State<ProfilePage> {
             // mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-
               StreamBuilder(
                   stream: FirebaseFirestore.instance
                       .collection('users')
@@ -64,17 +63,22 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              backgroundImage: (snapshot.data!['image'] == null || snapshot.data!['image'] == "")
-                                  ? const AssetImage("assets/images/avatar.jpeg") as ImageProvider
+                              backgroundImage: (snapshot.data!['image'] ==
+                                          null ||
+                                      snapshot.data!['image'] == "")
+                                  ? const AssetImage(
+                                          "assets/images/avatar.jpeg")
+                                      as ImageProvider
                                   : FileImage(File(snapshot.data!['image'])),
                             ),
                             Positioned(
                               right: -10,
-                              bottom: -5,
+                              bottom: -10,
                               child: IconButton(
-                                  onPressed: (){
+                                  onPressed: () {
                                     pickAndSaveProfilePicture();
-                                  }, icon: const Icon(Icons.camera_enhance)),
+                                  },
+                                  icon: const Icon(Icons.camera_enhance)),
                             )
                           ],
                         ),
@@ -200,7 +204,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text( snapshot.data!['contact'],
+                                              Text(snapshot.data!['contact'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -227,7 +231,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text( snapshot.data!['nationality'],
+                                              Text(
+                                                  snapshot.data!['nationality'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -245,16 +250,16 @@ class _ProfilePageState extends State<ProfilePage> {
                                           ),
                                           Column(
                                             crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 "Home Address",
                                                 style: AppStyle.cardfooter
                                                     .copyWith(
-                                                    fontWeight:
-                                                    FontWeight.bold),
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                               ),
-                                              Text( snapshot.data!['address'],
+                                              Text(snapshot.data!['address'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -281,7 +286,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text(snapshot.data!['subscription']['type'],
+                                              Text(
+                                                  snapshot.data!['subscription']
+                                                      ['type'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -308,7 +315,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text(snapshot.data!['subscription']['expiredAt'],
+                                              Text(
+                                                  snapshot.data!['subscription']
+                                                          ['expiredAt']
+                                                      .toString()
+                                                      .split('T')[0],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -372,35 +383,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         icon: const Icon(Icons.arrow_right_alt))
                               ],
                             ),
-                            const Divider(),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.logout,
-                                  color: Colors.green[500],
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Logout",
-                                      style: AppStyle.cardfooter.copyWith(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                    // Text("42", style: AppStyle.cardfooter),
-                                  ],
-                                ),
-                                const Spacer(),
-                                IconButton(
-                                    onPressed: () {
-                                      logout();
-                                    },
-                                    icon: const Icon(Icons.arrow_right_alt))
-                              ],
-                            ),
+
                             const Divider(),
                             Row(
                               children: [
@@ -463,6 +446,35 @@ class _ProfilePageState extends State<ProfilePage> {
                             Row(
                               children: [
                                 Icon(
+                                  Icons.logout,
+                                  color: Colors.green[500],
+                                ),
+                                const SizedBox(
+                                  width: 10,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Logout",
+                                      style: AppStyle.cardfooter.copyWith(
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    // Text("42", style: AppStyle.cardfooter),
+                                  ],
+                                ),
+                                const Spacer(),
+                                IconButton(
+                                    onPressed: () {
+                                      logout();
+                                    },
+                                    icon: const Icon(Icons.arrow_right_alt))
+                              ],
+                            ),
+                            const Divider(),
+                            Row(
+                              children: [
+                                Icon(
                                   Icons.delete,
                                   color: Colors.green[500],
                                 ),
@@ -516,7 +528,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-
   void _forgetPassword() {
     final user = FirebaseAuth.instance.currentUser;
     final email = user?.email ?? "";
@@ -565,7 +576,10 @@ class _ProfilePageState extends State<ProfilePage> {
         return;
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user?.uid)
+          .update({
         'image': filePath,
       });
 
