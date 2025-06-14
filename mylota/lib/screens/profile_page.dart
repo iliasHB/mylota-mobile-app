@@ -3,9 +3,11 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:mylota/screens/transactions_page.dart';
 import 'package:mylota/widgets/account_delete.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/forget_password_controller.dart';
@@ -21,7 +23,7 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   bool isLoading = false;
-
+  File? _image;
   void _startLoading() => setState(() => isLoading = true);
   void _stopLoading() => setState(() => isLoading = false);
   @override
@@ -40,6 +42,7 @@ class _ProfilePageState extends State<ProfilePage> {
             // mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+
               StreamBuilder(
                   stream: FirebaseFirestore.instance
                       .collection('users')
@@ -56,17 +59,21 @@ class _ProfilePageState extends State<ProfilePage> {
                     }
                     return Column(
                       children: [
-                        const Stack(
+                        Stack(
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              backgroundImage:
-                                  AssetImage("assets/images/avatar.jpeg"),
+                              backgroundImage: (snapshot.data!['image'] == null || snapshot.data!['image'] == "")
+                                  ? const AssetImage("assets/images/avatar.jpeg") as ImageProvider
+                                  : FileImage(File(snapshot.data!['image'])),
                             ),
                             Positioned(
-                              right: 0,
-                              bottom: 0,
-                              child: Icon(Icons.camera_enhance),
+                              right: -10,
+                              bottom: -5,
+                              child: IconButton(
+                                  onPressed: (){
+                                    pickAndSaveProfilePicture();
+                                  }, icon: const Icon(Icons.camera_enhance)),
                             )
                           ],
                         ),
@@ -74,7 +81,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           height: 10,
                         ),
                         Text(
-                          'soliuhabeeb@gmail.com',
+                          snapshot.data!['email'],
                           style: AppStyle.cardSubtitle,
                         ),
                         const SizedBox(
@@ -138,7 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("Habeeb",
+                                              Text(snapshot.data!['firstname'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -165,7 +172,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("Habeeb",
+                                              Text(snapshot.data!['lastname'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -192,7 +199,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("09087898767",
+                                              Text( snapshot.data!['contact'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -219,7 +226,34 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("Nigeria",
+                                              Text( snapshot.data!['nationality'],
+                                                  style: AppStyle.cardfooter),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                      const Divider(),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.home,
+                                            color: Colors.green[500],
+                                          ),
+                                          const SizedBox(
+                                            width: 10,
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                "Home Address",
+                                                style: AppStyle.cardfooter
+                                                    .copyWith(
+                                                    fontWeight:
+                                                    FontWeight.bold),
+                                              ),
+                                              Text( snapshot.data!['address'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -246,7 +280,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("Basic",
+                                              Text(snapshot.data!['subscription']['type'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -273,7 +307,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                                         fontWeight:
                                                             FontWeight.bold),
                                               ),
-                                              Text("Basic",
+                                              Text(snapshot.data!['subscription']['expiredAt'],
                                                   style: AppStyle.cardfooter),
                                             ],
                                           ),
@@ -479,9 +513,9 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void handleSendEmail() async {
-    final emailTo = "mylota138@gmail.com";
-    final subject = 'Support Request';
-    final message = 'Hi, I need assistance with...';
+    const emailTo = "mylota138@gmail.com";
+    const subject = 'Support Request';
+    const message = 'Hi, I need assistance with...';
     Uri url = Uri.parse(
         'mailto:$emailTo?subject=${Uri.encodeFull(subject)}&body=${Uri.encodeFull(message)}');
     await launchUrl(url);
@@ -489,7 +523,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void handleWhatsAppCall() async {
     // Uri whatsAppURL = Uri.parse("whatsapp://send?phone=$whatsAppNum");
-    Uri whatsAppURL = Uri.parse("whatsapp://send");
+    Uri whatsAppURL = Uri.parse("whatsapp://send?phone=");
     if (Platform.isIOS) {
       // for iOS phone only
       await launchUrl(whatsAppURL);
@@ -499,32 +533,61 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // Future<void> pickAndSaveProfilePicture(int userId) async {
-  //   final picker = ImagePicker();
-  //   final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-  //
-  //   if (pickedFile != null) {
-  //     final filePath = pickedFile.path;
-  //     final uploadedAt =
-  //     DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-  //
-  //     print('userId: $userId');
-  //
-  //     // Save to the database
-  //     final dbHelper = DatabaseHelper();
-  //     await dbHelper.insertProfilePicture({
-  //       'userId': userId,
-  //       'filePath': filePath,
-  //       'uploadedAt': uploadedAt,
-  //     });
-  //
-  //     print('Profile picture saved: $filePath');
-  //     // Update the state
-  //     setState(() {
-  //       _image = File(filePath); // Update the in-memory image file
-  //     });
-  //   } else {
-  //     print('No image selected.');
-  //   }
-  // }
+  Future<void> pickAndSaveProfilePicture() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      final filePath = pickedFile.path;
+      // final uploadedAt = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+
+      // Save to the database
+      // Upload image to Firebase Storage
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        print('User not logged in');
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(user?.uid).update({
+        'image': filePath,
+      });
+
+      // Update the state
+      setState(() {
+        _image = File(filePath); // Update the in-memory image file
+      });
+    } else {
+      print('No image selected.');
+    }
+  }
+
+  Future<void> requestPermissions() async {
+    await Permission.photos.request();
+    await Permission.camera.request();
+    await Permission.storage.request();
+  }
 }
+// final storageRef = FirebaseStorage.instance
+//     .ref()
+//     .child('profile_pictures')
+//     .child('${user!.uid}.jpg');
+//
+// await storageRef.putFile(file);
+//
+// // Get the download URL
+// final downloadUrl = await storageRef.getDownloadURL();
+
+// Save the URL to Firestore under users collection
+// await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+//   'profilePicture': downloadUrl,
+//   'profilePictureUpdatedAt': uploadedAt,
+// });
+///
+
+// final dbHelper = DatabaseHelper();
+// await dbHelper.insertProfilePicture({
+// 'userId': userId,
+// 'filePath': filePath,
+// 'uploadedAt': uploadedAt,
+// });

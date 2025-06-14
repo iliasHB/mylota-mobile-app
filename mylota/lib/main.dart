@@ -16,6 +16,7 @@ import 'core/usecase/provider/water_intake_provider.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeService();
+  // await requestPermissions();
   // await NotificationService.initializeNotification();
   final waterReminderProvider = WaterReminderProvider();
   final mealReminderProvider = MealPlannerProvider();

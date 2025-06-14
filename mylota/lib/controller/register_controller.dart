@@ -63,6 +63,7 @@ class RegisterController {
         'password': "",
         'firstname': firstname,
         'lastname': lastname,
+        'image': "",
         'subscription': subscriptionData,
         'nationality': country,
         'address': address,
