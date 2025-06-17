@@ -67,12 +67,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (docSnapshot.exists) {
         List<dynamic> subscription = docSnapshot["subscriptions"];
-        List<dynamic> nationality = docSnapshot["country"];
+        // List<dynamic> nationality = docSnapshot["country"];
 
         setState(() {
           // subscriptionPlans = subscription.map((item) => item["Type"].toString()).toList();
           subscriptionPlans = List<Map<String, dynamic>>.from(subscription);
-          countries = List<String>.from(nationality);
+          // countries = List<String>.from(nationality);
 
           if (subscriptionPlans.isNotEmpty) {
             // selectedPlan = subscriptionPlans.first;
