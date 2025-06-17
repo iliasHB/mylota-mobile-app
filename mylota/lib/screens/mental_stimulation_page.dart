@@ -107,7 +107,7 @@ class _MentalStimulationPageState extends State<MentalStimulationPage> {
       }
     });
 
-    requestNotificationPermission(context);
+    // requestNotificationPermission(context);
 
     // Move the periodic timer here and store it as a field
     _learningProgressPromptTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
