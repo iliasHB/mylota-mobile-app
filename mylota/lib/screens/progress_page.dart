@@ -780,7 +780,8 @@ class _ProgressPageState extends State<ProgressPage> {
                                                         .round(),
                                                   );
                                                   return Text(
-                                                    formatDuration(remainingDuration),
+                                                    formatDuration(
+                                                        remainingDuration),
                                                     style: AppStyle.cardTitle
                                                         .copyWith(
                                                       fontSize: 24,
@@ -801,14 +802,52 @@ class _ProgressPageState extends State<ProgressPage> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
-
                                         Text('Fall asleep',
                                             style: AppStyle.cardfooter),
-                                        // Text(bedTimeString!.toString() ?? "" ,style: AppStyle.cardTitle.copyWith(
-                                        // fontSize: 18,
-                                        // // color: isRunning ? Colors.green : Colors.grey[700],
-                                        // fontWeight: FontWeight.bold,)
-                                        // ),
+                                        StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('sleep-goals')
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser?.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData ||
+                                                !snapshot.data!.exists) {
+                                              return Text(
+                                                "No bedtime set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            Map<String, dynamic>? data =
+                                                snapshot.data!.data()
+                                                    as Map<String, dynamic>?;
+
+                                            if (data == null ||
+                                                !data.containsKey('bedtime')) {
+                                              return Text(
+                                                "No bedtime set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            return Text(
+                                              data['bedtime'] ?? "",
+                                              style: AppStyle.cardTitle.copyWith(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ],
                                     ),
                                     // Circular progress
@@ -870,13 +909,56 @@ class _ProgressPageState extends State<ProgressPage> {
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
+                                        // Text('Wake up',
+                                        //     style: AppStyle.cardfooter),
                                         Text('Wake up',
                                             style: AppStyle.cardfooter),
-                                        // Text(wakeTimeString!.toString() ?? "" ,style: AppStyle.cardTitle.copyWith(
-                                        // fontSize: 18,
-                                        // // color: isRunning ? Colors.green : Colors.grey[700],
-                                        // fontWeight: FontWeight.bold,)
-                                        // ),
+                                        StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('sleep-goals')
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser?.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData ||
+                                                !snapshot.data!.exists) {
+                                              return Text(
+                                                "No wake time set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            Map<String, dynamic>? data =
+                                                snapshot.data!.data()
+                                                    as Map<String, dynamic>?;
+
+                                            if (data == null ||
+                                                !data
+                                                    .containsKey('wake_time')) {
+                                              return Text(
+                                                "No wake time set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            return Text(
+                                              data['wake_time'] ?? "",
+                                              style:
+                                                  AppStyle.cardTitle.copyWith(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            );
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ],
