@@ -435,6 +435,7 @@ class _ProgressPageState extends State<ProgressPage> {
                     ],
                   ),
                 ),
+                //Water Intake Tracker                        
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16.0),

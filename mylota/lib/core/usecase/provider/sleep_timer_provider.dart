@@ -49,7 +49,7 @@ class SleepTimerProvider extends ChangeNotifier {
         durationMinutes = (24 * 60 - bedTimeMinutes) + wakeTimeMinutes;
       }
       
-      final durationHours = durationMinutes / 60.0;
+      final durationHours = durationMinutes / 60.00;
       
       startSleep(
         goalHours: durationHours,
@@ -127,7 +127,7 @@ class SleepTimerProvider extends ChangeNotifier {
     if (_sleepStartTime == null || !_isSleeping) return;
     
     final elapsed = DateTime.now().difference(_sleepStartTime!);
-    _actualHours = elapsed.inMinutes / 60.0;
+    _actualHours = elapsed.inMinutes / 60.00;
     _progress = _targetHours > 0 ? (_actualHours / _targetHours).clamp(0.0, 1.0) : 0.0;
     
     if (_progress >= 1.0 && !_isCompleted) {
