@@ -48,50 +48,50 @@ class _SleepGoalState extends State<SleepGoal> {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: isBedTime
-          ? (_bedTime ?? const TimeOfDay(hour: 22, minute: 0))
-          : (_wakeTime ?? const TimeOfDay(hour: 6, minute: 0))
+          ? (_bedTime ?? const TimeOfDay(hour: 22, minute: 00))
+          : (_wakeTime ?? const TimeOfDay(hour: 6, minute: 00))
     );
 
-    // if (pickedTime != null) {
-    //   setState(() {
-    //     if (isBedTime) {
-    //       _bedTime = pickedTime;
-    //       prefUtils.setStr("bedTime", _bedTime);
-    //       print("Bedtime set to: ${_bedTime}");
-    //       print("Bedtime saved to preferences: ${prefUtils.getStr("bedTime").toString()}");
-    //     } else {
-    //       _wakeTime = pickedTime;
-    //       prefUtils.setStr("wakeTime", _wakeTime);
-    //     }
-    //   });
+    if (pickedTime != null) {
+      setState(() {
+        if (isBedTime) {
+          _bedTime = pickedTime;
+          prefUtils.setStr("bedTime", _bedTime);
+          print("Bedtime set to: ${_bedTime}");
+          print("Bedtime saved to preferences: ${prefUtils.getStr("bedTime").toString()}");
+        } else {
+          _wakeTime = pickedTime;
+          prefUtils.setStr("wakeTime", _wakeTime);
+        }
+      });
       
-    //   if (_bedTime != null && _wakeTime != null) {
-    //     SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
-    //     _scheduleAlarm();
-    //   }
-    // }
-if (pickedTime != null) {
-  setState(() async {
-    if (isBedTime) {
-      _bedTime = pickedTime;
-      // Convert TimeOfDay to String before saving
-      final bedTimeString = _bedTime!.format(context);
-      await prefUtils.setStr("bedTime", bedTimeString); // Await the async method
-      print("Bedtime set to: $bedTimeString");
-      print("Bedtime saved to preferences: ${await prefUtils.getStr("bedTime")}"); // Await the getStr method
-    } else {
-      _wakeTime = pickedTime;
-      // Convert TimeOfDay to String before saving
-      final wakeTimeString = _wakeTime!.format(context);
-      await prefUtils.setStr("wakeTime", wakeTimeString); // Await the async method
+      if (_bedTime != null && _wakeTime != null) {
+        SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
+        _scheduleAlarm();
+      }
     }
-  });
+// if (pickedTime != null) {
+//   setState(() async {
+//     if (isBedTime) {
+//       _bedTime = pickedTime;
+//       // Convert TimeOfDay to String before saving
+//       final bedTimeString = _bedTime!.format(context);
+//       await prefUtils.setStr("bedTime", bedTimeString); // Await the async method
+//       print("Bedtime set to: $bedTimeString");
+//       print("Bedtime saved to preferences: ${await prefUtils.getStr("bedTime")}"); // Await the getStr method
+//     } else {
+//       _wakeTime = pickedTime;
+//       // Convert TimeOfDay to String before saving
+//       final wakeTimeString = _wakeTime!.format(context);
+//       await prefUtils.setStr("wakeTime", wakeTimeString); // Await the async method
+//     }
+//   });
 
-  if (_bedTime != null && _wakeTime != null) {
-    SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
-    _scheduleAlarm();
-  }
-}
+//   if (_bedTime != null && _wakeTime != null) {
+//     SleepScheduleController.saveSleepGoal(_bedTime, _wakeTime, context);
+//     _scheduleAlarm();
+//   }
+// }
   }
 
   

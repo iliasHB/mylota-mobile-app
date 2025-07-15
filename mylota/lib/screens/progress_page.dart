@@ -802,6 +802,10 @@ class _ProgressPageState extends State<ProgressPage> {
                                                   fontWeight: FontWeight.bold,
                                                 ),
                                               ),
+                                        const Icon(Icons.bedtime,
+                                            color: Colors
+                                                .indigo), // Fall asleep icon
+                                        const SizedBox(width: 5),
                                         Text('Fall asleep',
                                             style: AppStyle.cardfooter),
                                         StreamBuilder<DocumentSnapshot>(
@@ -841,7 +845,8 @@ class _ProgressPageState extends State<ProgressPage> {
 
                                             return Text(
                                               data['bedtime'] ?? "",
-                                              style: AppStyle.cardTitle.copyWith(
+                                              style:
+                                                  AppStyle.cardTitle.copyWith(
                                                 fontSize: 18,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -909,8 +914,10 @@ class _ProgressPageState extends State<ProgressPage> {
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        // Text('Wake up',
-                                        //     style: AppStyle.cardfooter),
+                                        const Icon(Icons.wb_sunny,
+                                            color:
+                                                Colors.orange), // Wake up icon
+                                        const SizedBox(width: 5),
                                         Text('Wake up',
                                             style: AppStyle.cardfooter),
                                         StreamBuilder<DocumentSnapshot>(
