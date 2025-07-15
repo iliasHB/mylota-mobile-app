@@ -5,9 +5,10 @@ import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart';
 import 'package:mylota/utils/styles.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'dart:convert';
-
+import '../core/services/notification_service.dart';
 import '../controller/todo_controller.dart';
 import 'custom_input_decorator.dart';
+
 
 class ToDoList extends StatefulWidget {
   const ToDoList({super.key});
@@ -17,6 +18,7 @@ class ToDoList extends StatefulWidget {
 }
 
 class _ToDoListState extends State<ToDoList> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _taskTitleController = TextEditingController();
   final TextEditingController _taskDescController = TextEditingController();
   List<Map<String, dynamic>> tasks = [];
@@ -60,127 +62,171 @@ class _ToDoListState extends State<ToDoList> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            readOnly: true,
-            decoration: InputDecoration(
-              // enabled: isDisable,
-              prefixIcon: const Icon(
-                Icons.calendar_month,
-                color: Colors.green,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextFormField(
+              readOnly: true,
+              decoration: InputDecoration(
+                // enabled: isDisable,
+                prefixIcon: const Icon(
+                  Icons.calendar_month,
+                  color: Colors.green,
+                ),
+                filled: true,
+                fillColor: const Color(0xFF2A7F67).withOpacity(0.3),
+                hintStyle: AppStyle.cardfooter.copyWith(
+                  fontSize: 12,
+                ),
+                hintText: fromDate == null
+                    ? 'Select Start Date and Time'
+                    : fromDate.toString(),
+                border: OutlineInputBorder(
+                    borderSide: BorderSide.none,
+                    borderRadius: BorderRadius.circular(5)),
               ),
-              filled: true,
-              fillColor: const Color(0xFF2A7F67).withOpacity(0.3),
-              hintStyle: AppStyle.cardfooter.copyWith(
-                fontSize: 12,
-              ),
-              hintText: fromDate == null
-                  ? 'Select Start Date and Time'
-                  : fromDate.toString(),
-              border: OutlineInputBorder(
-                  borderSide: BorderSide.none,
-                  borderRadius: BorderRadius.circular(5)),
+              onTap: () {
+                DatePicker.showDateTimePicker(
+                  context,
+                  showTitleActions: true,
+                  onConfirm: (date) {
+                    setState(() {
+                      fromDate = date;
+                      // isDisable = true;
+                    });
+                  },
+                  currentTime: DateTime.now(),
+                );
+              },
             ),
-            onTap: () {
-              DatePicker.showDateTimePicker(
-                context,
-                showTitleActions: true,
-                onConfirm: (date) {
-                  setState(() {
-                    fromDate = date;
-                    // isDisable = true;
-                  });
-                },
-                currentTime: DateTime.now(),
-              );
-            },
-          ),
-          const SizedBox(height: 10),
-          TextFormField(
-            controller: _taskTitleController,
-            cursorColor: const Color(0xFF66C3A7),
-            decoration: customInputDecoration(
-                labelText: 'Task Title',
-                hintText: 'Enter task',
-                prefixIcon: const Icon(Icons.task, color: Colors.green)),
-            validator: (value) {
-              if (_taskTitleController.text.isEmpty ||
-                  _taskTitleController.text == "") {
-                return "Task title is empty";
-              }
-              return null;
-            },
-          ),
-          /* const SizedBox(height: 10),
-          TextFormField(
-            controller: _taskDescController,
-            cursorColor: const Color(0xFF66C3A7),
-            decoration: customInputDecoration(
-                labelText: 'Task Description',
-                hintText: 'Enter task description',
-                prefixIcon: const Icon(Icons.book, color: Colors.green)),
-            validator: (value) {
-              if (_taskDescController.text.isEmpty ||
-                  _taskDescController.text == "") {
-                return "Task title is empty";
-              }
-              return null;
-            },
-          ), */
-          /* const SizedBox(height: 10),
-          tasks.isEmpty
-              ? const Center(child: Text('No tasks added yet.'))
-              : Expanded(
-                  child: ListView.builder(
-                    itemCount: tasks.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        child: ListTile(
-                          title: Text(tasks[index]['title']),
-                          subtitle: Text(tasks[index]['description']),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => _removeTask(index),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _taskTitleController,
+              cursorColor: const Color(0xFF66C3A7),
+              decoration: customInputDecoration(
+                  labelText: 'Task Title',
+                  hintText: 'Enter task',
+                  prefixIcon: const Icon(Icons.task, color: Colors.green)),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) {
+                  return "Task title cannot be empty";
+                }
+                return null;
+              },
+            ),
+            /* const SizedBox(height: 10),
+            TextFormField(
+              controller: _taskDescController,
+              cursorColor: const Color(0xFF66C3A7),
+              decoration: customInputDecoration(
+                  labelText: 'Task Description',
+                  hintText: 'Enter task description',
+                  prefixIcon: const Icon(Icons.book, color: Colors.green)),
+              validator: (value) {
+                if (_taskDescController.text.isEmpty ||
+                    _taskDescController.text == "") {
+                  return "Task title is empty";
+                }
+                return null;
+              },
+            ), */
+            /* const SizedBox(height: 10),
+            tasks.isEmpty
+                ? const Center(child: Text('No tasks added yet.'))
+                : Expanded(
+                    child: ListView.builder(
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          child: ListTile(
+                            title: Text(tasks[index]['title']),
+                            subtitle: Text(tasks[index]['description']),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _removeTask(index),
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ), */
-          const SizedBox(height: 20),
-          Center(
-              child: isLoading
-                  ? const CustomContainerLoadingButton()
-                  : CustomPrimaryButton(
-                      label: 'Save',
-                      onPressed: () async {
-                        List<Map<String, dynamic>> tasks = [
-                          {
-                            'reminder-date': fromDate,
-                            'title': _taskTitleController.text.trim(),
-                            'description': _taskDescController.text.trim(),
-                            'acknowledgment': false,
-                            'createdAt': Timestamp.now().toDate().toIso8601String(),
-                          },
-                        ];
-                        saveTodo(tasks, context);
-                        // await TodoController.saveTasks(tasks, context);
-                      }, 
-                    )
-          ),
-        ],
+                        );
+                      },
+                    ),
+                  ), */
+            const SizedBox(height: 20),
+            Center(
+                child: isLoading
+                    ? const CustomContainerLoadingButton()
+                    : CustomPrimaryButton(
+                        label: 'Save',
+                        onPressed: () async {
+                          if (_formKey.currentState!.validate()) {
+                            if (fromDate == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Please select a date for your task.'),
+                                    backgroundColor: Colors.red),
+                              );
+                              return;
+                            }
+                            List<Map<String, dynamic>> tasks = [
+                              {
+                                'reminder-date': fromDate,
+                                'title': _taskTitleController.text.trim(),
+                                'description': _taskDescController.text.trim(),
+                                'acknowledgment': false,
+                                'createdAt':
+                                    Timestamp.now().toDate().toIso8601String(),
+                              },
+                            ];
+                            saveTodo(tasks, context);
+
+                            // Schedule a local notification for the task
+                            final taskTitle = _taskTitleController.text.trim();
+                            if (fromDate!.isAfter(DateTime.now())) {
+                              await NotificationService.scheduleNotification(
+                                id: fromDate
+                                    .hashCode, // Unique ID for the notification
+                                title: 'Task Reminder: $taskTitle',
+                                body: 'Your scheduled task is due now!',
+                                scheduledDate: fromDate!,
+                                // Using new channel for To-do reminders
+                                channelId: 'todo_reminder_channel',
+                                channelTitle: 'To-do Reminders',
+                                channelDesc:
+                                    'Reminders for your scheduled tasks.',
+                              );
+                            }
+
+                            if (!mounted) return;
+                            // Clear fields after successful save
+                            setState(() {
+                              _taskTitleController.clear();
+                              _taskDescController.clear();
+                              fromDate = null;
+                            });
+                          }
+                        },
+                      )
+                      ),
+          ],
+        ),
       ),
     );
   }
 
   void saveTodo(List<Map<String, dynamic>> tasks, BuildContext context) async {
+    if (fromDate == null || fromDate is! DateTime) {
+      print('❌ fromDate must be a DateTime object');
+      return;
+    }
+
     await TodoController.saveTasks(
       tasks,
       context,
       onStartLoading: _startLoading,
-      onStopLoading: _stopLoading,);
+      onStopLoading: _stopLoading,
+    );
   }
 }
 

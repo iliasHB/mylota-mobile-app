@@ -5,30 +5,29 @@ import '../utils/styles.dart';
 
 class CustomPrimaryButton extends StatelessWidget {
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed; // Make this nullable
   final Color? backgroundColor;
+  final Color? textColor;
   final EdgeInsetsGeometry padding;
-  final TextStyle? textStyle;
   final double borderRadius;
 
   const CustomPrimaryButton({
     super.key,
     required this.label,
-    required this.onPressed,
+    this.onPressed, // Now nullable
     this.backgroundColor,
+    this.textColor,
     this.padding = const EdgeInsets.symmetric(vertical: 16.0, horizontal: 50.0),
-    this.textStyle,
     this.borderRadius = 10.0,
   });
-
-  
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: onPressed,
+      onPressed: onPressed, // Can be null now
       style: ElevatedButton.styleFrom(
         backgroundColor: backgroundColor ?? const Color(0xFF2A7F67), // Default color
+        disabledBackgroundColor: Colors.grey, // Style for disabled state
         padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),
@@ -36,7 +35,13 @@ class CustomPrimaryButton extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: textStyle ?? AppStyle.cardSubtitle.copyWith(color: Colors.white, fontSize: 14),
+        style: TextStyle(
+          color: onPressed != null 
+              ? (textColor ?? Colors.white)
+              : Colors.grey[600], // Different color when disabled
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

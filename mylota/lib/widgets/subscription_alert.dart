@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:mylota/screens/payment_selection_screen.dart';
 import 'package:mylota/widgets/custom_button.dart';
 
 import '../screens/payment_method.dart';
@@ -107,11 +108,18 @@ class _SubscriptionAlertState extends State<SubscriptionAlert> {
                   child: CustomPrimaryButton(
                       label: 'Basic Plan',
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (_) => PaymentGateway(
-                            email: widget.email,
-                            price: subscriptionPlans[0]['Amount'],
-                            description: subscriptionPlans[0]['Description'],
-                            type: subscriptionPlans[0]['Type'])));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PaymentSelectionScreen(
+                              amount: subscriptionPlans[0]['Amount'],
+                              productName: '${subscriptionPlans[0]['Type']} Subscription',
+                              productType: 'subscription',
+                              email: widget.email,  // Pass email
+                              planDescription: subscriptionPlans[0]['Description'], // Pass description
+                            ),
+                          ),
+                        );
 
                       }),
                 ),

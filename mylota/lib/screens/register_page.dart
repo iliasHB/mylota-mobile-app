@@ -62,26 +62,33 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       DocumentSnapshot docSnapshot = await FirebaseFirestore.instance
           .collection("user-inputs")
-          .doc("yQtkG0iE0dA0tcrQ8RAW") // replace with actual doc ID
+          .doc("yQtkG0iE0dA0tcrQ8RAW")
           .get();
 
       if (docSnapshot.exists) {
         List<dynamic> subscription = docSnapshot["subscriptions"];
-        // List<dynamic> nationality = docSnapshot["country"];
+       // List<dynamic> nationality = docSnapshot["country"];
 
         setState(() {
-          // subscriptionPlans = subscription.map((item) => item["Type"].toString()).toList();
           subscriptionPlans = List<Map<String, dynamic>>.from(subscription);
-          // countries = List<String>.from(nationality);
+          //countries = List<String>.from(nationality);
 
-          if (subscriptionPlans.isNotEmpty) {
-            // selectedPlan = subscriptionPlans.first;
-          }
+          // ✅ Don't auto-select the first plan - let user choose
+          // if (subscriptionPlans.isNotEmpty) {
+          //   selectedPlan = subscriptionPlans.first;
+          // }
         });
+        
+        print('✅ Loaded ${subscriptionPlans.length} subscription plans');
+        print('✅ Loaded ${countries.length} countries');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error fetching dropdown data: ${e.toString()}')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching dropdown data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
       print("Error fetching dropdown data: $e");
     }
   }
@@ -174,7 +181,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "First name can not be empty";
+                      return "email can not be empty";
                     }
                     return null;
                   },
@@ -271,7 +278,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {
-                      return "email can not be empty";
+                      return "Address can not be empty";
                     }
                     return null;
                   },
@@ -341,19 +348,58 @@ class _RegisterPageState extends State<RegisterPage> {
                 isLoading
                     ? const CustomContainerLoadingButton()
                     : CustomPrimaryButton(
-                  label: 'Register',
-                    onPressed: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        if (selectedPlan == null) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(
-                                "Subscription plan not selected",
-                                style: AppStyle.cardfooter,
-                              )));
-                        }
-                        register();
-                      }
-                    }, ),
+                        label: 'Register',
+                        onPressed: () {
+                          if (_formKey.currentState?.validate() ?? false) {
+                            // ✅ Fix: Better plan validation
+                            if (selectedPlan == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please select a subscription plan"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return; // ✅ Important: Return early if no plan selected
+                            }
+                            
+                            // ✅ Fix: Validate phone number
+                            if (phoneNumber.phoneNumber == null || phoneNumber.phoneNumber!.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Please enter a valid phone number"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            // ✅ Fix: Validate password match
+                            if (pwdController.text.trim() != retypePwdController.text.trim()) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text("Passwords do not match"),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+                            
+                            // ✅ Fix: Validate country selection
+                            // if (country == null || country!.isEmpty) {
+                            //   ScaffoldMessenger.of(context).showSnackBar(
+                            //     const SnackBar(
+                            //       content: Text("Please select your country"),
+                            //       backgroundColor: Colors.red,
+                            //     ),
+                            //   );
+                            //   return;
+                            // }
+                            
+                            // If all validations pass, proceed with registration
+                            register();
+                          }
+                        },
+                      ),
                 const SizedBox(height: 20),
 
                 // Back to Login Button
@@ -370,38 +416,74 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void register() {
+  // ✅ Add safety checks
+  if (selectedPlan == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Please select a subscription plan"),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
 
-    if (!selectedPlan!['Type'].toString().contains('Trial')) {
-      Navigator.push(context, MaterialPageRoute(builder: (_)
-      => PaymentGateway(
-          email: emailController.text.trim(),
-          price: selectedPlan!['Amount'],
-          description: selectedPlan!['Description'],
-          type: selectedPlan!['Type'],
-          password: pwdController.text.trim(),
-          firstname: firstnameController.text.trim(),
-          lastname: lastnameController.text.trim(),
-          country: country!,
-          address: addressController.text.trim(),
-          contact: contactController.text.trim()
-      )));
+  try {
+    // ✅ Start loading state
+    _startLoading();
+    
+    // ✅ Check if it's a trial plan
+    bool isTrialPlan = selectedPlan!['Type'].toString().toLowerCase().contains('trial');
+    
+    if (!isTrialPlan) {
+      // ✅ Navigate to payment for paid plans
+      _stopLoading(); // Stop loading before navigation
+      
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PaymentGateway(
+            email: emailController.text.trim(),
+            price: selectedPlan!['Amount'],
+            description: selectedPlan!['Description'],
+            type: selectedPlan!['Type'],
+            password: pwdController.text.trim(),
+            firstname: firstnameController.text.trim(),
+            lastname: lastnameController.text.trim(),
+            country: country!,
+            address: addressController.text.trim(),
+            contact: phoneNumber.phoneNumber!, // ✅ Use actual phone number
+          ),
+        ),
+      );
     } else {
+      // ✅ Register directly for trial plans
       RegisterController.registerUser(
-          emailController.text.trim(),
-          pwdController.text.trim(),
-          firstnameController.text.trim(),
-          lastnameController.text.trim(),
-          selectedPlan!['Type'],
-          country!,
-          addressController.text.trim(),
-          onStartLoading: _startLoading,
-          onStopLoading: _stopLoading,
-          context: context,
-          selectedPlan!['Amount'],
-          contactController.text.trim()
+        emailController.text.trim(),
+        pwdController.text.trim(),
+        firstnameController.text.trim(),
+        lastnameController.text.trim(),
+        selectedPlan!['Type'],
+        country!,
+        addressController.text.trim(),
+        onStartLoading: _startLoading,
+        onStopLoading: _stopLoading,
+        context: context,
+        selectedPlan!['Amount'],
+        phoneNumber.phoneNumber!, // ✅ Use actual phone number
       );
     }
+  } catch (e) {
+    // ✅ Handle any errors
+    _stopLoading();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Registration error: ${e.toString()}"),
+        backgroundColor: Colors.red,
+      ),
+    );
+    print("Registration error: $e");
   }
+}
 }
 
 

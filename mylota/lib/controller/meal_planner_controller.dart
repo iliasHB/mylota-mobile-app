@@ -126,13 +126,23 @@ class MealPlannerController {
           Provider.of<MealPlannerProvider>(context, listen: false)
               .startMealPlanner(
               mealController,
-              selectedCategory,
-              selectedDayCategory,
-              mealTime.format(context),
-              selectedItem,
-              selectedItem2,
-              acknowledged);
-
+              selectedCategory, // category
+              selectedDayCategory, // day_category
+              '0', // calories
+              '0', // protein
+              '0', // carbs
+              '0', // fat
+              '0', // fiber
+              '0', // sugar
+              '0', // sodium
+              '0', // cholesterol
+              '0', // vitaminA
+              '0', // vitaminC
+              '0', // calcium
+              '0', // iron
+              selectedItem!, // ingredients
+              selectedItem2!, // instructions
+          );
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Meal saved successfully!'),
@@ -189,8 +199,8 @@ class MealPlannerController {
         today.year,
         today.month,
         today.day,
-        int.parse(mealTimeParts[0]),
-        int.parse(mealTimeParts[1]),
+        int.tryParse((mealTimeParts.isNotEmpty ? mealTimeParts[0] : '0')) ?? 0,
+        int.tryParse((mealTimeParts.length > 1 ? mealTimeParts[1] : '0')) ?? 0,
       );
 
       final hasTimePassed = DateTime.now().isAfter(reminderTime);
@@ -221,63 +231,26 @@ class MealPlannerController {
         bool acknowledge = false;
 
         Provider.of<MealPlannerProvider>(context, listen: false)
-            .startMealPlanner(mealName, selectedCategory, selectedDayCategory,
-                reminderTime, selectedItem, selectedItem2, acknowledge);
+            .startMealPlanner(
+            mealName,
+            selectedCategory,
+            selectedDayCategory,
+            '0', // calories
+            '0', // protein
+            '0', // carbs
+            '0', // fat
+            '0', // fiber
+            '0', // sugar
+            '0', // sodium
+            '0', // cholesterol
+            '0', // vitaminA
+            '0', // vitaminC
+            '0', // calcium
+            '0', // iron
+            selectedItem, // ingredients
+            selectedItem2, // instructions
+        );
       }
     }
   }
-
-//
-  // static Future<void> checkAndResetAcknowledgedFlag(
-  //     BuildContext context) async {
-  //   final uid = FirebaseAuth.instance.currentUser?.uid;
-  //   if (uid == null) {
-  //     return;
-  //   }
-  //
-  //   final docSnapshot = await FirebaseFirestore.instance
-  //       .collection('meal-planner')
-  //       .doc(uid)
-  //       .get();
-  //
-  //   if (docSnapshot.exists) {
-  //     final data = docSnapshot.data();
-  //     final bool isAcknowledged = data?['acknowledged'] ?? false;
-  //
-  //     final today = DateTime.now();
-  //     final todayStr =
-  //         "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-  //
-  //     // Check if today is a new day and acknowledgment is already done
-  //     if (isAcknowledged) {
-  //       // Reset acknowledged status
-  //       await FirebaseFirestore.instance
-  //           .collection('meal-planner')
-  //           .doc(uid)
-  //           .update({
-  //         'acknowledged': false, // Reset acknowledged for new day
-  //         'reminder-date': todayStr, // Update today's date
-  //       });
-  //
-  //       // Reschedule the reminder for today
-  //       final reminderTime = data?['meal-time'] ?? "08:00"; // Get reminder time from Firestore
-  //       final meal = data?['name'] ?? "";
-  //       final selectedCategory = data?[''] ?? "";
-  //       final selectedDayCategory = data?[''] ?? "";
-  //       final selectedItem = data?['vegetable1'] ?? "";
-  //       final selectedItem2 = data?['vegetable2'] ?? "";
-  //       bool acknowledge = false;
-  //
-  //       Provider.of<MealPlannerProvider>(context, listen: false)
-  //           .startMealPlanner(
-  //               meal,
-  //               selectedCategory,
-  //               selectedDayCategory,
-  //               reminderTime,
-  //               selectedItem,
-  //               selectedItem2,
-  //               acknowledge); // false indicates new day reminder
-  //     }
-  //   }
-  // }
 }
