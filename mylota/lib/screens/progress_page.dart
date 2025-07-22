@@ -96,31 +96,31 @@ class _ProgressPageState extends State<ProgressPage> {
   }
 
   void _startCountdownTimers() {
-    exerciseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (exerciseCountdown.inSeconds > 0) {
-          exerciseCountdown -= const Duration(seconds: 1);
-          exerciseProgress = 100.0 -
-              (exerciseCountdown.inSeconds / (widget.exerciseGoal * 60)) *
-                  100.0;
-        } else {
-          exerciseTimer?.cancel();
-        }
-      });
+  exerciseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    setState(() {
+      if (exerciseCountdown.inSeconds > 0) {
+        exerciseCountdown -= const Duration(seconds: 1);
+        exerciseProgress = 100.0 -
+            (exerciseCountdown.inSeconds / (widget.exerciseGoal * 60)) * 100.0;
+      } else {
+        exerciseTimer?.cancel();
+      }
     });
+  });
 
-    sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (sleepCountdown.inSeconds > 0) {
-          sleepCountdown -= const Duration(seconds: 1);
-          sleepProgress = 100.0 -
-              (sleepCountdown.inSeconds / (widget.sleepGoal * 3600)) * 100.0;
-        } else {
-          sleepTimer?.cancel();
-        }
-      });
+  sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    setState(() {
+      if (sleepCountdown.inSeconds > 0) {
+        sleepCountdown -= const Duration(seconds: 1);
+        sleepProgress = 100.0 -
+            (sleepCountdown.inSeconds / (widget.sleepGoal * 3600)) * 100.0;
+      } else {
+        sleepTimer?.cancel();
+      }
     });
-  }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -180,9 +180,9 @@ class _ProgressPageState extends State<ProgressPage> {
                           final progress = provider.progress;
                           final remaining =
                               provider.totalDuration - provider.duration;
-                          String formatDuration(Duration d) =>
-                              '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-
+                         String formatDuration(Duration d) {
+  return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
                           return Column(
                             children: [
                               const SizedBox(height: 16),
@@ -435,7 +435,7 @@ class _ProgressPageState extends State<ProgressPage> {
                     ],
                   ),
                 ),
-                //Water Intake Tracker                        
+                //Water Intake Tracker
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16.0),
@@ -728,15 +728,15 @@ class _ProgressPageState extends State<ProgressPage> {
                         builder: (context, sleepProvider, child) {
                           final hasGoal = sleepProvider.targetHours > 0;
                           String formatSleepTime(double hours) {
-                            final totalMinutes = (hours * 60).round();
-                            final displayHours = totalMinutes ~/ 60;
-                            final displayMinutes = totalMinutes % 60;
-                            return '${displayHours.toString().padLeft(2, '0')}:${displayMinutes.toString().padLeft(2, '0')}';
-                          }
-
-                          String formatDuration(Duration d) =>
-                              '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
-
+  final totalSeconds = (hours * 3600).round(); // Convert hours to total seconds
+  final displayHours = totalSeconds ~/ 3600; // Extract hours
+  final displayMinutes = (totalSeconds % 3600) ~/ 60; // Extract minutes
+  final displaySeconds = totalSeconds % 60; // Extract seconds
+  return '${displayHours.toString().padLeft(2, '0')}:${displayMinutes.toString().padLeft(2, '0')}:${displaySeconds.toString().padLeft(2, '0')}';
+}
+                          String formatDuration(Duration d) {
+  return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
                           return Column(
                             children: [
                               const SizedBox(height: 16),
@@ -770,15 +770,8 @@ class _ProgressPageState extends State<ProgressPage> {
                                                     (i) => i),
                                                 builder: (context, snapshot) {
                                                   // Show live countdown if sleeping
-                                                  final remaining =
-                                                      sleepProvider.progress;
-                                                  final remainingDuration =
-                                                      Duration(
-                                                    seconds: (remaining *
-                                                            sleepProvider
-                                                                .targetHours *
-                                                            3600)
-                                                        .round(),
+                                                  final remaining = sleepProvider.progress;
+                                                  final remainingDuration = Duration(seconds: (remaining * sleepProvider.actualHours*3600).round(),
                                                   );
                                                   return Text(
                                                     formatDuration(
@@ -952,7 +945,7 @@ class _ProgressPageState extends State<ProgressPage> {
                                                 style:
                                                     AppStyle.cardTitle.copyWith(
                                                   fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight./,
                                                 ),
                                               );
                                             }

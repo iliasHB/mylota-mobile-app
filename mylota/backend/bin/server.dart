@@ -14,7 +14,6 @@ void main() async {
   final env = DotEnv(); // Don't load the corrupted file
   
   // TEMPORARY: Hardcode the fresh key for testing
-  const stripeSecretKey = 'sk_test_51Rku0K4GO9W81Cm2hggQ8WH1pW6egtoEdM6PiYOcunPUZ9XPQlRN5i5ddtAvn7G9tQmagXjdue06LveS7xc3TJt300sFrLyuO7';
   const port = '8081';
 
   // Debug: Print loaded values (without exposing the full key)
