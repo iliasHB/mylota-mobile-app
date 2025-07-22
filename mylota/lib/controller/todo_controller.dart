@@ -12,8 +12,8 @@ import '../widgets/subscription_alert.dart';
 class TodoController {
   static Future<void> saveTasks(
       List<Map<String, dynamic>> tasks, BuildContext context,
-      {required VoidCallback onStartLoading,
-      required VoidCallback onStopLoading}) async {
+      {required Function onStartLoading,
+      required Function onStopLoading}) async {
     try {
       onStartLoading();
       User? user = FirebaseAuth.instance.currentUser;
@@ -57,21 +57,17 @@ class TodoController {
           FirebaseFirestore.instance.collection('todo-goals').doc(user.uid);
 
           DocumentSnapshot docSnapshot = await userDoc.get();
-          List<dynamic> existingTasks = [];
+          List<Map<String, dynamic>> existingTasks = [];
 
           if (docSnapshot.exists && docSnapshot.data() != null) {
-            Map<String, dynamic> data = docSnapshot.data() as Map<
-                String,
-                dynamic>;
-            existingTasks =
-            List<Map<String, dynamic>>.from(data['tasks'] ?? []);
+            Map<String, dynamic> data = docSnapshot.data() as Map<String, dynamic>;
+            existingTasks = List<Map<String, dynamic>>.from(data['tasks'] ?? []);
           }
 
           // print("Existing Tasks Before Update: ${jsonEncode(existingTasks)}");
 
           for (var newTask in tasks) {
-            int existingIndex = existingTasks
-                .indexWhere((task) => task['title'] == newTask['title']);
+            int existingIndex = existingTasks.indexWhere((task) => task['title'] == newTask['title']);
 
             if (existingIndex != -1) {
               // existingTasks[existingIndex]['description'] = newTask['description'];
@@ -86,35 +82,31 @@ class TodoController {
               onStopLoading();
               return;
             } else {
-              // final today = DateTime.now();
-              // final todayStr = "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-              final time = newTask['reminder-date']
-                  .toString()
-                  .split(' ')
-                  .last;
-              final reminderTime = time
-                  .toString()
-                  .split('.')
-                  .first;
-              final reminderDate = newTask['reminder-date']
-                  .toString()
-                  .split(' ')
-                  .first;
-              bool acknowledged = false;
+              final reminderDateTime = newTask['reminder-date'] as DateTime;
               existingTasks.add({
-                'reminder-date': reminderDate, // Default if null,
+                'reminder-date': reminderDateTime,
                 'title': newTask['title'],
                 'description': newTask['description'],
-                'reminder-time': reminderTime,
-                'acknowledged': acknowledged,
-                'createdAt': newTask['createdAt'].toString(),
+                'acknowledgment': newTask['acknowledgment'] ?? false,
+                'createdAt': DateTime.now().toString(), // Store current time
               });
               Provider.of<ToDoScheduleProvider>(context, listen: false)
                   .startTodoSchedule(
-                  newTask['title'], reminderTime, acknowledged,
-                  reminderDate); // false ind
+                      newTask['title'],
+                      DateFormat('HH:mm:ss').format(reminderDateTime),
+                      newTask['acknowledgment'] ?? false,
+                      DateFormat('yyyy-MM-dd')
+                          .format(reminderDateTime)); // false ind
             }
           }
+
+          // Sort the tasks based on createdAt in descending order
+          existingTasks.sort((a, b) {
+            DateTime dateA = DateTime.parse(a['createdAt']);
+            DateTime dateB = DateTime.parse(b['createdAt']);
+            return dateB.compareTo(dateA); // Sort in descending order
+          });
+
           if (existingTasks.isNotEmpty) {
             await userDoc.set({
               'tasks': existingTasks,

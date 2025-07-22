@@ -11,6 +11,9 @@ Future<void> requestPermissions() async {
     var photos = await Permission.photos.status;
     var camera = await Permission.camera.status;
     var storage = await Permission.storage.status;
+    var alarm = await Permission.scheduleExactAlarm.status;
+
+    // Removed wakeLock permission as it does not exist in permission_handler
     if(notification.isDenied){
       await Permission.notification.request();
     }
@@ -25,6 +28,15 @@ Future<void> requestPermissions() async {
     }
     if(storage.isDenied){
       await Permission.storage.request();
+    }
+
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 31) {
+        if(alarm.isDenied){
+          await Permission.scheduleExactAlarm.request();
+        }
+      }
     }
   }
 }
