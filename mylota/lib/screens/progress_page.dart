@@ -4,7 +4,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:mylota/utils/pref_util.dart';
 import 'package:mylota/utils/styles.dart';
+import 'package:mylota/widgets/exercise_goal.dart';
+import 'package:mylota/widgets/sleep_goal.dart';
 import 'package:provider/provider.dart';
 import '../core/usecase/provider/exercise_timer_provider.dart';
 import '../core/usecase/provider/sleep_timer_provider.dart';
@@ -50,12 +53,15 @@ class _ProgressPageState extends State<ProgressPage> {
   Timer? exerciseTimer;
   Timer? sleepTimer;
 
+  PrefUtils prefUtils = PrefUtils();
+
   @override
   void initState() {
     super.initState();
     exerciseCountdown = Duration(minutes: widget.exerciseGoal.toInt());
     sleepCountdown = Duration(hours: widget.sleepGoal.toInt());
     _startCountdownTimers();
+    loadSleepGoal();
   }
 
   @override
@@ -65,650 +71,938 @@ class _ProgressPageState extends State<ProgressPage> {
     super.dispose();
   }
 
-  void _startCountdownTimers() {
-    exerciseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (exerciseCountdown.inSeconds > 0) {
-          exerciseCountdown -= const Duration(seconds: 1);
-          exerciseProgress = 100.0 -
-              (exerciseCountdown.inSeconds / (widget.exerciseGoal * 60)) *
-                  100.0;
-        } else {
-          exerciseTimer?.cancel();
-        }
-      });
-    });
+  String bedTimeString = "";
+  String wakeTimeString = "";
+  Future<void> loadSleepGoal() async {
+    String? bedTimeString = await prefUtils.getStr("bedTime");
+    String? wakeTimeString = await prefUtils.getStr("wakeTime");
 
-    sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (sleepCountdown.inSeconds > 0) {
-          sleepCountdown -= const Duration(seconds: 1);
-          sleepProgress = 100.0 -
-              (sleepCountdown.inSeconds / (widget.sleepGoal * 3600)) * 100.0;
-        } else {
-          sleepTimer?.cancel();
-        }
-      });
-    });
+    if (bedTimeString != null && wakeTimeString != null) {
+      // setState(() {
+      //   bedTimeString = bedTimeString;
+      //   wakeTimeString = wakeTimeString;
+      // });
+      // final bedTime = TimeOfDay(
+      //   hour: int.parse(bedTimeString.split(":")[0]),
+      //   minute: int.parse(bedTimeString.split(":")[1]),
+      // );
+      // final wakeTime = TimeOfDay(
+      //   hour: int.parse(wakeTimeString.split(":")[0]),
+      //   minute: int.parse(wakeTimeString.split(":")[1]),
+      // );
+
+      // context.read<SleepTimerProvider>().startDailySleepTimer(bedTime, wakeTime);
+    }
   }
+
+  void _startCountdownTimers() {
+  exerciseTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    setState(() {
+      if (exerciseCountdown.inSeconds > 0) {
+        exerciseCountdown -= const Duration(seconds: 1);
+        exerciseProgress = 100.0 -
+            (exerciseCountdown.inSeconds / (widget.exerciseGoal * 60)) * 100.0;
+      } else {
+        exerciseTimer?.cancel();
+      }
+    });
+  });
+
+  sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    setState(() {
+      if (sleepCountdown.inSeconds > 0) {
+        sleepCountdown -= const Duration(seconds: 1);
+        sleepProgress = 100.0 -
+            (sleepCountdown.inSeconds / (widget.sleepGoal * 3600)) * 100.0;
+      } else {
+        sleepTimer?.cancel();
+      }
+    });
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width; // Get screen width
     // final isExercise = context.watch<ExerciseTimerProvider>().remainingTime;
     return Scaffold(
-        appBar: appBar(context: context, title: "Your Progress"),
-        body: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
-            ),
+      appBar: appBar(context: context, title: "Your Progress"),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE0F2F1), Color(0xFFB2DFDB)],
           ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    // height: 350,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A7F67).withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DashboardComponentTitle(
-                              logo: const CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    '🏋️‍♂️',
-                                    style: TextStyle(fontSize: 20),
-                                  )),
-                              title: 'Exercise goal',
-                              subTitle: "Recent exercise goal",
-                            )),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Consumer<ExerciseTimerProvider>(
-                          builder: (context, timerProvider, child) {
-                            int minutes = timerProvider.remainingTime ~/ 60;
-                            int seconds = timerProvider.remainingTime % 60;
-                            return Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  timerProvider.exerciseName == ""
-                                      ? "No Exercise"
-                                      : timerProvider.exerciseName,
-                                  style: AppStyle.cardfooter,
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  // height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A7F67).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DashboardComponentTitle(
+                            logo: const CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  '🏋️‍♂️',
+                                  style: TextStyle(fontSize: 20),
+                                )),
+                            title: 'Exercise goal',
+                            subTitle: "Recent exercise goal",
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Consumer<ExerciseTimerProvider>(
+                        builder: (context, provider, child) {
+                          final hasGoal = provider.totalDuration.inSeconds > 0;
+                          final isRunning = provider.isRunning;
+                          final isCompleted = provider.isCompleted;
+                          final progress = provider.progress;
+                          final remaining =
+                              provider.totalDuration - provider.duration;
+                         String formatDuration(Duration d) {
+  return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
+                          return Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              if (!hasGoal) ...[
+                                Column(
+                                  children: [
+                                    Icon(Icons.fitness_center_outlined,
+                                        size: 48, color: Colors.grey[400]),
+                                    const SizedBox(height: 8),
+                                    Text('No exercise goal set',
+                                        style: AppStyle.cardfooter),
+                                    const SizedBox(height: 16),
+                                    const ExerciseGoal(), // or your goal-setting widget
+                                  ],
                                 ),
-                                Text(
-                                    '$minutes:${seconds.toString().padLeft(2, '0')}',
-                                    style: AppStyle.cardTitle
-                                        .copyWith(fontSize: 50)),
-                              ],
-                            );
-                          },
-                        ),
-                        // Column(
-                        //   mainAxisAlignment: MainAxisAlignment.start,
-                        //   crossAxisAlignment: CrossAxisAlignment.start,
-                        //   children: [
-                        //     // Row(
-                        //     //   children: [
-                        //     //     Text('Task', style: AppStyle.cardSubtitle),
-                        //     //     const Spacer(),
-                        //     //     Text('Period', style: AppStyle.cardSubtitle),
-                        //     //   ],
-                        //     // ),
-                        //     Consumer<ExerciseTimerProvider>(
-                        //       builder: (context, timerProvider, child) {
-                        //         int minutes = timerProvider.remainingTime ~/ 60;
-                        //         int seconds = timerProvider.remainingTime % 60;
-                        //         return Text(
-                        //           '$minutes:${seconds.toString().padLeft(2, '0')}',
-                        //           style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
-                        //         );
-                        //       },
-                        //     ),
-                        //   ],
-                        // ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    // height: 350,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A7F67).withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DashboardComponentTitle(
-                              logo: const CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    '📝',
-                                    style: TextStyle(fontSize: 20),
-                                  )
-                                  // Icon(
-                                  //   Icons.today_outlined,
-                                  //   size: 25,
-                                  //   color: Colors.green,
-                                  // ),
-                                  ),
-                              title: 'To-do',
-                              subTitle: "Recent To-dos",
-                            )),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text('Task', style: AppStyle.cardSubtitle),
-                                const Spacer(),
-                                Text('Period', style: AppStyle.cardSubtitle),
-                              ],
-                            ),
-                            StreamBuilder(
-                              stream: FirebaseFirestore.instance
-                                  .collection('todo-goals')
-                                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                                  .snapshots(),
-                              builder: (context,
-                                  AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                if (!snapshot.hasData || !snapshot.data!.exists) {
-                                  return const Center(
-                                      child: Text("No tasks available"));
-                                }
-
-                                Map<String, dynamic>? data = snapshot.data!
-                                    .data() as Map<String, dynamic>?;
-
-                                if (data == null ||
-                                    !data.containsKey('tasks') ||
-                                    (data['tasks'] as List).isEmpty) {
-                                  return const Center(
-                                      child: Text("No tasks available"));
-                                }
-
-                                List<dynamic> tasks = data['tasks'];
-
-                                return SizedBox(
-                                  height: 200,
-                                  child: ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    itemCount: tasks.length,
-                                    itemBuilder: (context, index) {
-                                      var task = tasks[index];
-                                      return Column(
-                                        children: [
-                                          DetailItem(
-                                              title: task['title'].toString(),
-                                              desc: task['description'],
-                                              period: task['period'] ?? "No period"),
-                                          const Divider(),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                            InkWell(
-                              onTap: () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_)=>const MoreTodos()));
-                              },
-                              child: Align(
-                                  alignment: Alignment.topRight,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text(
-                                      'See more',
-                                      style: AppStyle.cardfooter.copyWith(
-                                        color: Colors.green[800],
-                                      ),
-                                      textAlign: TextAlign.right,
-                                    ),
-                                  )),
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    // height: 350,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A7F67).withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DashboardComponentTitle(
-                              logo: const CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    '💧',
-                                    style: TextStyle(fontSize: 20),
-                                  )),
-                              title: 'Water Intake',
-                              subTitle: "Daily water intake schedule",
-                            )),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            StreamBuilder(
-                              stream: FirebaseFirestore.instance
-                                  .collection('water-intake-schedule')
-                                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                                  .snapshots(),
-                              builder: (context,
-                                  AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                if (!snapshot.hasData ||
-                                    !snapshot.data!.exists) {
-                                  return Center(
-                                      child: Text(
-                                    "No water intake schedule available",
-                                    style: AppStyle.cardSubtitle,
-                                  ));
-                                }
-
-                                Map<String, dynamic> data = snapshot.data!
-                                    .data() as Map<String, dynamic>;
-                                // .data() as Map<String, dynamic>?;
-                                if (data == null) {
-                                  return Center(
-                                      child: Text(
-                                    "No water intake schedule available",
-                                    style: AppStyle.cardSubtitle,
-                                  ));
-                                }
-                                return _buildWaterTracker(
-                                    data['daily-water-intake']);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A7F67).withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DashboardComponentTitle(
-                              logo: const CircleAvatar(
-                                  backgroundColor: Colors.white,
-                                  child: Text(
-                                    '🍱',
-                                    style: TextStyle(fontSize: 20),
-                                  )),
-                              title: 'Meal Planner',
-                              subTitle: "Recent meal schedule",
-                            )),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            StreamBuilder(
-                              stream: FirebaseFirestore.instance
-                                  .collection('meal-planner')
-                                  .doc(FirebaseAuth.instance.currentUser?.uid)
-                                  .snapshots(),
-                              builder: (context,
-                                  AsyncSnapshot<DocumentSnapshot> snapshot) {
-                                if (!snapshot.hasData || !snapshot.data!.exists) {
-                                  return Center(
-                                    child: Text(
-                                      "No meals available",
-                                      style: AppStyle.cardSubtitle,
-                                    ),
-                                  );
-                                }
-
-                                String currentDay =
-                                    DateFormat('EEEE').format(DateTime.now());
-                                Map<String, dynamic>? data = snapshot.data!
-                                    .data() as Map<String, dynamic>?;
-
-                                if (data == null ||
-                                    !data.containsKey(currentDay)) {
-                                  return Center(
-                                    child: Text(
-                                      "No meals schedule set for today",
-                                      style: AppStyle.cardfooter,
-                                    ),
-                                  );
-                                }
-
-                                Map<String, dynamic> categories =
-                                    data[currentDay] as Map<String,
-                                        dynamic>; // e.g., Breakfast, Lunch...
-
-                                return SizedBox(
-                                  height: 300,
-                                  child: ListView(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    children: categories.entries.map((entry) {
-                                      String mealType =
-                                          entry.key; // Breakfast, Lunch, Dinner
-                                      Map<String, dynamic> meal =
-                                          entry.value; // The meal object
-
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                currentDay,
-                                                style: AppStyle.cardSubtitle
-                                                    .copyWith(fontSize: 14),
-                                              ),
-                                              Text(
-                                                mealType,
-                                                style: AppStyle.cardSubtitle
-                                                    .copyWith(fontSize: 14),
-                                              ),
-                                            ],
+                              ] else ...[
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    // Running countdown
+                                    Column(
+                                      children: [
+                                        Text('Time Left',
+                                            style: AppStyle.cardfooter
+                                                .copyWith(fontSize: 12)),
+                                        Text(
+                                          formatDuration(remaining),
+                                          style: AppStyle.cardTitle.copyWith(
+                                            fontSize: 24,
+                                            color: isRunning
+                                                ? Colors.green
+                                                : Colors.grey[700],
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          _buildMealItem(meal),
-                                          const Divider(),
-                                        ],
-                                      );
-                                    }).toList(),
+                                        ),
+                                      ],
+                                    ),
+                                    // Progress circle
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 80,
+                                          height: 80,
+                                          child: CircularProgressIndicator(
+                                            value: progress,
+                                            backgroundColor: Colors.grey[300],
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              isRunning
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                            ),
+                                            strokeWidth: 8,
+                                          ),
+                                        ),
+                                        Column(
+                                          children: [
+                                            Icon(
+                                              isRunning
+                                                  ? Icons.fitness_center
+                                                  : Icons.timer,
+                                              color: isRunning
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                              size: 20,
+                                            ),
+                                            Text(
+                                              '${(progress * 100).toInt()}%',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: isRunning
+                                                    ? Colors.green
+                                                    : Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    // Set goal
+                                    Column(
+                                      children: [
+                                        Text('Goal',
+                                            style: AppStyle.cardfooter
+                                                .copyWith(fontSize: 12)),
+                                        Text(
+                                          formatDuration(
+                                              provider.totalDuration),
+                                          style: AppStyle.cardTitle.copyWith(
+                                            fontSize: 24,
+                                            color: Colors.grey[700],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  provider.exerciseType ?? '',
+                                  style: AppStyle.cardfooter
+                                      .copyWith(fontSize: 14),
+                                ),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
+                      // Column(
+                      //   mainAxisAlignment: MainAxisAlignment.start,
+                      //   crossAxisAlignment: CrossAxisAlignment.start,
+                      //   children: [
+                      //     // Row(
+                      //     //   children: [
+                      //     //     Text('Task', style: AppStyle.cardSubtitle),
+                      //     //     const Spacer(),
+                      //     //     Text('Period', style: AppStyle.cardSubtitle),
+                      //     //   ],
+                      //     // ),
+                      //     Consumer<ExerciseTimerProvider>(
+                      //       builder: (context, timerProvider, child) {
+                      //         int minutes = timerProvider.remainingTime ~/ 60;
+                      //         int seconds = timerProvider.remainingTime % 60;
+                      //         return Text(
+                      //           '$minutes:${seconds.toString().padLeft(2, '0')}',
+                      //           style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
+                      //         );
+                      //       },
+                      //     ),
+                      //   ],
+                      // ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  // height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A7F67).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DashboardComponentTitle(
+                            logo: const CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  '📝',
+                                  style: TextStyle(fontSize: 20),
+                                )
+                                // Icon(
+                                //   Icons.today_outlined,
+                                //   size: 25,
+                                //   color: Colors.green,
+                                // ),
+                                ),
+                            title: 'To-do',
+                            subTitle: "Recent To-dos",
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text('Task', style: AppStyle.cardSubtitle),
+                              const Spacer(),
+                              Text('Period', style: AppStyle.cardSubtitle),
+                            ],
+                          ),
+                          StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('todo-goals')
+                                .doc(FirebaseAuth.instance.currentUser?.uid)
+                                .snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<DocumentSnapshot> snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return const Center(
+                                    child: Text("No tasks available"));
+                              }
+
+                              Map<String, dynamic>? data = snapshot.data!.data()
+                                  as Map<String, dynamic>?;
+
+                              if (data == null ||
+                                  !data.containsKey('tasks') ||
+                                  (data['tasks'] as List).isEmpty) {
+                                return const Center(
+                                    child: Text("No tasks available"));
+                              }
+
+                              List<dynamic> tasks = data['tasks'];
+
+                              return SizedBox(
+                                height: 200,
+                                child: ListView.builder(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  itemCount: tasks.length,
+                                  itemBuilder: (context, index) {
+                                    var task = tasks[index];
+                                    return Column(
+                                      children: [
+                                        DetailItem(
+                                            title: task['title'].toString(),
+                                            desc: task['description'],
+                                            period:
+                                                task['period'] ?? "No period"),
+                                        const Divider(),
+                                      ],
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                          InkWell(
+                            onTap: () {
+                              // Navigator.push(context, MaterialPageRoute(builder: (_)=>const MoreTodos()));
+                            },
+                            child: Align(
+                                alignment: Alignment.topRight,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Text(
+                                    'See more',
+                                    style: AppStyle.cardfooter.copyWith(
+                                      color: Colors.green[800],
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                )),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                //Water Intake Tracker
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  // height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A7F67).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DashboardComponentTitle(
+                            logo: const CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  '💧',
+                                  style: TextStyle(fontSize: 20),
+                                )),
+                            title: 'Water Intake',
+                            subTitle: "Daily water intake schedule",
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('water-intake-schedule')
+                                .doc(FirebaseAuth.instance.currentUser?.uid)
+                                .snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<DocumentSnapshot> snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Center(
+                                    child: Text(
+                                  "No water intake schedule available",
+                                  style: AppStyle.cardSubtitle,
+                                ));
+                              }
+
+                              Map<String, dynamic> data =
+                                  snapshot.data!.data() as Map<String, dynamic>;
+                              // .data() as Map<String, dynamic>?;
+                              if (data == null) {
+                                return Center(
+                                    child: Text(
+                                  "No water intake schedule available",
+                                  style: AppStyle.cardSubtitle,
+                                ));
+                              }
+                              return _buildWaterTracker(
+                                  data['daily-water-intake']);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A7F67).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DashboardComponentTitle(
+                            logo: const CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  '🍱',
+                                  style: TextStyle(fontSize: 20),
+                                )),
+                            title: 'Meal Planner',
+                            subTitle: "Recent meal schedule",
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('meal-planner')
+                                .doc(FirebaseAuth.instance.currentUser?.uid)
+                                .snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<DocumentSnapshot> snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Center(
+                                  child: Text(
+                                    "No meals available",
+                                    style: AppStyle.cardSubtitle,
                                   ),
                                 );
-                              },
-                            ),
-                            InkWell(
-                              onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) =>
-                                          const MoreMealSchedule())),
-                              child: Align(
-                                  alignment: Alignment.topRight,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text(
-                                      'See more',
-                                      style: AppStyle.cardfooter.copyWith(
-                                        color: Colors.green[800],
-                                      ),
-                                      textAlign: TextAlign.right,
-                                    ),
-                                  )),
-                            )
+                              }
 
-                            // StreamBuilder(
-                            //   stream: FirebaseFirestore.instance
-                            //       .collection('meal-planner')
-                            //       .doc(FirebaseAuth.instance.currentUser?.uid)
-                            //       .snapshots(),
-                            //   builder: (context,
-                            //       AsyncSnapshot<DocumentSnapshot> snapshot) {
-                            //     if (!snapshot.hasData || !snapshot.data!.exists) {
-                            //       return Center(
-                            //           child: Text(
-                            //         "No meals available",
-                            //         style: AppStyle.cardSubtitle,
-                            //       ));
-                            //     }
-                            //     String currentDay = DateFormat('EEEE').format(DateTime.now());
-                            //     Map<String, dynamic>? data = snapshot.data!
-                            //         .data() as Map<String, dynamic>?;
-                            //
-                            //     if (data == null ||
-                            //         !data.containsKey('categories')) {
-                            //       return Center(
-                            //           child: Text(
-                            //         "No meals available",
-                            //         style: AppStyle.cardSubtitle,
-                            //       ));
-                            //     }
-                            //
-                            //     Map<String, dynamic> categories =
-                            //         data[currentDay]; // Treat as Map
-                            //
-                            //     return SizedBox(
-                            //       height: 300, // Adjust as needed
-                            //       child: ListView(
-                            //         physics:
-                            //             const NeverScrollableScrollPhysics(),
-                            //         children: categories.entries.map((entry) {
-                            //           String mealType = entry.key; // "Breakfast", "Lunch", "Dinner"
-                            //           List<dynamic> meals =
-                            //               entry.value; // Extract the list
-                            //
-                            //           return Column(
-                            //             crossAxisAlignment:
-                            //                 CrossAxisAlignment.start,
-                            //             children: [
-                            //               Text(mealType,
-                            //                   style: const TextStyle(
-                            //                       fontSize: 18,
-                            //                       fontWeight: FontWeight.bold)),
-                            //               ...meals
-                            //                   .map((meal) =>
-                            //                       _buildMealItem(meal))
-                            //                   .toList(),
-                            //               const Divider(),
-                            //             ],
-                            //           );
-                            //         }).toList(),
-                            //       ),
-                            //     );
-                            //   },
-                            // ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16.0),
-                    // height: 350,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                            padding: const EdgeInsets.all(8.0),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF2A7F67).withOpacity(0.4),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: DashboardComponentTitle(
-                              logo: const CircleAvatar(
-                                  backgroundColor: Colors.white,
+                              String currentDay =
+                                  DateFormat('EEEE').format(DateTime.now());
+                              Map<String, dynamic>? data = snapshot.data!.data()
+                                  as Map<String, dynamic>?;
+
+                              if (data == null ||
+                                  !data.containsKey(currentDay)) {
+                                return Center(
                                   child: Text(
-                                    '🌙',
-                                    style: TextStyle(fontSize: 20),
-                                  )),
-                              title: 'Sleeping',
-                              subTitle: "Recent sleeping goal",
-                            )),
-                        const SizedBox(
-                          height: 10,
-                        ),
-                        Consumer<SleepTimerProvider>(
-                          builder: (context, timerProvider, _) {
-                            if (timerProvider.isCounting &&
-                                timerProvider.remaining != null) {
-                              final r = timerProvider.remaining!;
-                              final h = r.inHours.toString().padLeft(2, '0');
-                              final m =
-                                  (r.inMinutes % 60).toString().padLeft(2, '0');
-                              final s =
-                                  (r.inSeconds % 60).toString().padLeft(2, '0');
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Sleeping Countdown',
-                                      style: AppStyle.cardfooter),
-                                  Text('$h:$m:$s',
-                                      // '${sleepCountdown.inHours.toString().padLeft(2, '0')}:${(sleepCountdown.inMinutes % 60).toString().padLeft(2, '0')}:${(sleepCountdown.inSeconds % 60).toString().padLeft(2, '0')}',
-                                      style: AppStyle.cardTitle
-                                          .copyWith(fontSize: 50)),
-                                ],
-                              );
-                            } else {
-                              return Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('No sleep countdown running.'),
-                                  Text('00:00:00',
-                                      style: AppStyle.cardTitle
-                                          .copyWith(fontSize: 50)),
-                                ],
-                              );
-                            }
-                          },
-                        )
+                                    "No meals schedule set for today",
+                                    style: AppStyle.cardfooter,
+                                  ),
+                                );
+                              }
 
-                        // Consumer<ExerciseTimerProvider>(
-                        //   builder: (context, timerProvider, child) {
-                        //     int minutes = timerProvider.remainingTime ~/ 60;
-                        //     int seconds = timerProvider.remainingTime % 60;
-                        //     return Column(
-                        //       mainAxisAlignment: MainAxisAlignment.start,
-                        //       crossAxisAlignment: CrossAxisAlignment.start,
-                        //       children: [
-                        //         Text('Sleeping Countdown',
-                        //             style: AppStyle.cardSubtitle),
-                        //         Text(
-                        //           '${sleepCountdown.inHours.toString().padLeft(2, '0')}:${(sleepCountdown.inMinutes % 60).toString().padLeft(2, '0')}:${(sleepCountdown.inSeconds % 60).toString().padLeft(2, '0')}',
-                        //           style: const TextStyle(
-                        //               fontSize: 24,
-                        //               fontWeight: FontWeight.bold),
-                        //         ),
-                        //         //   _buildCountdownDisplay(
-                        //         //   'Sleep Countdown', sleepCountdown
-                        //         // Text(
-                        //         //   timerProvider.exerciseName == ""
-                        //         //       ? "No Exercise"
-                        //         //       : timerProvider.exerciseName,
-                        //         //   style: AppStyle.cardSubtitle,
-                        //         // ),
-                        //         // Text(
-                        //         //   '$minutes:${seconds.toString().padLeft(2, '0')}',
-                        //         //   style: const TextStyle(
-                        //         //       fontSize: 50,
-                        //         //       fontWeight: FontWeight.bold),
-                        //         // ),
-                        //       ],
-                        //     );
-                        //   },
-                        // ),
-                        ///
-                        // Column(
-                        //   mainAxisAlignment: MainAxisAlignment.start,
-                        //   crossAxisAlignment: CrossAxisAlignment.start,
-                        //   children: [
-                        //     // Row(
-                        //     //   children: [
-                        //     //     Text('Task', style: AppStyle.cardSubtitle),
-                        //     //     const Spacer(),
-                        //     //     Text('Period', style: AppStyle.cardSubtitle),
-                        //     //   ],
-                        //     // ),
-                        //     Consumer<ExerciseTimerProvider>(
-                        //       builder: (context, timerProvider, child) {
-                        //         int minutes = timerProvider.remainingTime ~/ 60;
-                        //         int seconds = timerProvider.remainingTime % 60;
-                        //         return Text(
-                        //           '$minutes:${seconds.toString().padLeft(2, '0')}',
-                        //           style: const TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
-                        //         );
-                        //       },
-                        //     ),
-                        //   ],
-                        // ),
-                      ],
-                    ),
+                              Map<String, dynamic> categories = data[currentDay]
+                                  as Map<String,
+                                      dynamic>; // e.g., Breakfast, Lunch...
+
+                              return SizedBox(
+                                height: 300,
+                                child: ListView(
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  children: categories.entries.map((entry) {
+                                    String mealType =
+                                        entry.key; // Breakfast, Lunch, Dinner
+                                    Map<String, dynamic> meal =
+                                        entry.value; // The meal object
+
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              currentDay,
+                                              style: AppStyle.cardSubtitle
+                                                  .copyWith(fontSize: 14),
+                                            ),
+                                            Text(
+                                              mealType,
+                                              style: AppStyle.cardSubtitle
+                                                  .copyWith(fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                        _buildMealItem(meal),
+                                        const Divider(),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
+                              );
+                            },
+                          ),
+                          InkWell(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => const MoreMealSchedule())),
+                            child: Align(
+                                alignment: Alignment.topRight,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: Text(
+                                    'See more',
+                                    style: AppStyle.cardfooter.copyWith(
+                                      color: Colors.green[800],
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                )),
+                          )
+
+                          // StreamBuilder(
+                          //   stream: FirebaseFirestore.instance
+                          //       .collection('meal-planner')
+                          //       .doc(FirebaseAuth.instance.currentUser?.uid)
+                          //       .snapshots(),
+                          //   builder: (context,
+                          //       AsyncSnapshot<DocumentSnapshot> snapshot) {
+                          //     if (!snapshot.hasData || !snapshot.data!.exists) {
+                          //       return Center(
+                          //           child: Text(
+                          //         "No meals available",
+                          //         style: AppStyle.cardSubtitle,
+                          //       ));
+                          //     }
+                          //     String currentDay = DateFormat('EEEE').format(DateTime.now());
+                          //     Map<String, dynamic>? data = snapshot.data!
+                          //         .data() as Map<String, dynamic>?;
+                          //
+                          //     if (data == null ||
+                          //         !data.containsKey('categories')) {
+                          //       return Center(
+                          //           child: Text(
+                          //         "No meals available",
+                          //         style: AppStyle.cardSubtitle,
+                          //       ));
+                          //     }
+                          //
+                          //     Map<String, dynamic> categories =
+                          //         data[currentDay]; // Treat as Map
+                          //
+                          //     return SizedBox(
+                          //       height: 300, // Adjust as needed
+                          //       child: ListView(
+                          //         physics:
+                          //             const NeverScrollableScrollPhysics(),
+                          //         children: categories.entries.map((entry) {
+                          //           String mealType = entry.key; // "Breakfast", "Lunch", "Dinner"
+                          //           List<dynamic> meals =
+                          //               entry.value; // Extract the list
+                          //
+                          //           return Column(
+                          //             crossAxisAlignment:
+                          //                 CrossAxisAlignment.start,
+                          //             children: [
+                          //               Text(mealType,
+                          //                   style: const TextStyle(
+                          //                       fontSize: 18,
+                          //                       fontWeight: FontWeight.bold)),
+                          //               ...meals
+                          //                   .map((meal) =>
+                          //                       _buildMealItem(meal))
+                          //                   .toList(),
+                          //               const Divider(),
+                          //             ],
+                          //           );
+                          //         }).toList(),
+                          //       ),
+                          //     );
+                          //   },
+                          // ),
+                        ],
+                      ),
+                    ],
                   ),
-                  // const SizedBox(height: 20),
-                  // _buildFullWidthContainer(
-                  //   screenWidth: screenWidth,
-                  //   child: _buildCountdownDisplay(
-                  //       'Sleep Countdown', sleepCountdown),
-                  // ),
-                  _buildFullWidthContainer(
-                    screenWidth: screenWidth,
-                    child: _buildChartContainer(),
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  // height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ],
-              ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                          padding: const EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2A7F67).withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: DashboardComponentTitle(
+                            logo: const CircleAvatar(
+                                backgroundColor: Colors.white,
+                                child: Text(
+                                  '🌙',
+                                  style: TextStyle(fontSize: 20),
+                                )),
+                            title: 'Sleeping',
+                            subTitle: "Recent sleeping goal",
+                          )),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Consumer<SleepTimerProvider>(
+                        builder: (context, sleepProvider, child) {
+                          final hasGoal = sleepProvider.targetHours > 0;
+                          String formatSleepTime(double hours) {
+  final totalSeconds = (hours * 3600).round(); // Convert hours to total seconds
+  final displayHours = totalSeconds ~/ 3600; // Extract hours
+  final displayMinutes = (totalSeconds % 3600) ~/ 60; // Extract minutes
+  final displaySeconds = totalSeconds % 60; // Extract seconds
+  return '${displayHours.toString().padLeft(2, '0')}:${displayMinutes.toString().padLeft(2, '0')}:${displaySeconds.toString().padLeft(2, '0')}';
+}
+                          String formatDuration(Duration d) {
+  return '${d.inHours.toString().padLeft(2, '0')}:${(d.inMinutes % 60).toString().padLeft(2, '0')}:${(d.inSeconds % 60).toString().padLeft(2, '0')}';
+}
+                          return Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              if (!hasGoal) ...[
+                                Column(
+                                  children: [
+                                    Icon(Icons.bedtime_outlined,
+                                        size: 48, color: Colors.grey[400]),
+                                    const SizedBox(height: 8),
+                                    Text('No sleep goal set',
+                                        style: AppStyle.cardfooter),
+                                    const SizedBox(height: 16),
+                                    SleepGoal(),
+                                  ],
+                                ),
+                              ] else ...[
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    // Running hour countdown clock
+                                    Column(
+                                      children: [
+                                        Text('Countdown',
+                                            style: AppStyle.cardfooter
+                                                .copyWith(fontSize: 12)),
+                                        sleepProvider.isSleeping
+                                            ? StreamBuilder<int>(
+                                                stream: Stream.periodic(
+                                                    const Duration(seconds: 1),
+                                                    (i) => i),
+                                                builder: (context, snapshot) {
+                                                  // Show live countdown if sleeping
+                                                  final remaining = sleepProvider.progress;
+                                                  final remainingDuration = Duration(seconds: (remaining * sleepProvider.actualHours*3600).round(),
+                                                  );
+                                                  return Text(
+                                                    formatDuration(
+                                                        remainingDuration),
+                                                    style: AppStyle.cardTitle
+                                                        .copyWith(
+                                                      fontSize: 24,
+                                                      color: Colors.green[800],
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  );
+                                                },
+                                              )
+                                            : Text(
+                                                formatSleepTime(
+                                                    sleepProvider.actualHours),
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 24,
+                                                  color: Colors.grey[700],
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                        const Icon(Icons.bedtime,
+                                            color: Colors
+                                                .indigo), // Fall asleep icon
+                                        const SizedBox(width: 5),
+                                        Text('Fall asleep',
+                                            style: AppStyle.cardfooter),
+                                        StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('sleep-goals')
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser?.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData ||
+                                                !snapshot.data!.exists) {
+                                              return Text(
+                                                "No bedtime set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            Map<String, dynamic>? data =
+                                                snapshot.data!.data()
+                                                    as Map<String, dynamic>?;
+
+                                            if (data == null ||
+                                                !data.containsKey('bedtime')) {
+                                              return Text(
+                                                "No bedtime set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            return Text(
+                                              data['bedtime'] ?? "",
+                                              style:
+                                                  AppStyle.cardTitle.copyWith(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                    // Circular progress
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        SizedBox(
+                                          width: 80,
+                                          height: 80,
+                                          child: CircularProgressIndicator(
+                                            value: sleepProvider.progress,
+                                            backgroundColor: Colors.grey[300],
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              sleepProvider.isSleeping
+                                                  ? Colors.green
+                                                  : Colors.grey,
+                                            ),
+                                            strokeWidth: 8,
+                                          ),
+                                        ),
+                                        Column(
+                                          children: [
+                                            Icon(
+                                              sleepProvider.isSleeping
+                                                  ? Icons.bedtime
+                                                  : Icons.alarm,
+                                              color: sleepProvider.isSleeping
+                                                  ? Colors.indigo
+                                                  : Colors.grey,
+                                              size: 20,
+                                            ),
+                                            Text(
+                                              '${(sleepProvider.progress * 100).toInt()}%',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: sleepProvider.isSleeping
+                                                    ? Colors.indigo
+                                                    : Colors.grey,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    // Set hour (goal)
+                                    Column(
+                                      children: [
+                                        Text('Sleep hours',
+                                            style: AppStyle.cardfooter
+                                                .copyWith(fontSize: 12)),
+                                        Text(
+                                          formatSleepTime(
+                                              sleepProvider.targetHours),
+                                          style: AppStyle.cardTitle.copyWith(
+                                            fontSize: 24,
+                                            color: Colors.grey[700],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Icon(Icons.wb_sunny,
+                                            color:
+                                                Colors.orange), // Wake up icon
+                                        const SizedBox(width: 5),
+                                        Text('Wake up',
+                                            style: AppStyle.cardfooter),
+                                        StreamBuilder<DocumentSnapshot>(
+                                          stream: FirebaseFirestore.instance
+                                              .collection('sleep-goals')
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser?.uid)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (!snapshot.hasData ||
+                                                !snapshot.data!.exists) {
+                                              return Text(
+                                                "No wake time set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              );
+                                            }
+
+                                            Map<String, dynamic>? data =
+                                                snapshot.data!.data()
+                                                    as Map<String, dynamic>?;
+
+                                            if (data == null ||
+                                                !data
+                                                    .containsKey('wake_time')) {
+                                              return Text(
+                                                "No wake time set",
+                                                style:
+                                                    AppStyle.cardTitle.copyWith(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                              );
+                                            }
+
+                                            return Text(
+                                              data['wake_time'] ?? "",
+                                              style:
+                                                  AppStyle.cardTitle.copyWith(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                //         Row(
+                                //             children: [
+                                //       const Icon(Icons.bedtime, color: Colors.indigo), // Fall asleep icon
+                                //       const SizedBox(width: 5),
+                                //       Text('Fall asleep', style: AppStyle.cardSubtitle),
+                                //       Text(prefUtils.getStr("bedTime").toString() ?? "",style: AppStyle.cardTitle.copyWith(
+                                //       fontSize: 20,
+                                //       // color: isRunning ? Colors.green : Colors.grey[700],
+                                //       fontWeight: FontWeight.bold,)
+                                //       ),
+                                //       const Spacer(),
+                                //       const Icon(Icons.wb_sunny, color: Colors.orange), // Wake up icon
+                                //       const SizedBox(width: 5),
+                                //       Text('Wake up', style: AppStyle.cardSubtitle),
+                                //          Text(prefUtils.getStr("waketTime").toString() ?? "",style: AppStyle.cardTitle.copyWith(
+                                //       fontSize: 20,
+                                //       // color: isRunning ? Colors.green : Colors.grey[700],
+                                //       fontWeight: FontWeight.bold,)
+                                //       ),
+                                //        ],
+                                // ),
+                              ],
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                _buildFullWidthContainer(
+                  screenWidth: screenWidth,
+                  child: _buildChartContainer(),
+                ),
+              ],
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 
   Widget _buildFullWidthContainer(
@@ -732,48 +1026,6 @@ class _ProgressPageState extends State<ProgressPage> {
       child: child,
     );
   }
-  //
-  // Widget _buildCheckListProgress({
-  //   required String title,
-  //   required List<String> items,
-  //   required List<String> completedItems,
-  //   required Function(String, bool) onItemChecked,
-  // }) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(title,
-  //           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-  //       const SizedBox(height: 10),
-  //       if (items.isEmpty)
-  //         const Text("No items added yet!",
-  //             style: TextStyle(
-  //                 color: Colors.grey, fontSize: 14)), // Handle empty list
-  //       ...items.map((item) {
-  //         return CheckboxListTile(
-  //           title: Text(item),
-  //           value: completedItems.contains(item),
-  //           onChanged: (bool? isChecked) {
-  //             setState(() {
-  //               if (isChecked == true) {
-  //                 completedItems.add(item);
-  //               } else {
-  //                 completedItems.remove(item);
-  //               }
-  //               todoProgress =
-  //                   (completedTodos.length / widget.todoList.length) * 100;
-  //               mealProgress =
-  //                   (completedMeals.length / widget.meals.length) * 100;
-  //             });
-  //           },
-  //           controlAffinity:
-  //               ListTileControlAffinity.leading, // Aligns checkbox to left
-  //           activeColor: Colors.green, // Set checkbox color
-  //         );
-  //       }).toList(),
-  //     ],
-  //   );
-  // }
 
   Widget _buildCountdownDisplay(String title, Duration countdown) {
     return Column(
@@ -789,26 +1041,28 @@ class _ProgressPageState extends State<ProgressPage> {
     );
   }
 
-  Widget _buildWaterTracker(String data) {
+  Widget _buildWaterTracker(dynamic data) {
+    double value = 0.0;
+    if (data != null) {
+      value = double.tryParse(data.toString()) ?? 0.0;
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // const Text('Water Intake',
-        //     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         Slider(
-          value: double.parse(data.toString()),
+          value: value,
           min: 0,
           max: 5.0,
-          activeColor: const Color(0xFF66C3A7), // Updated slider color
-          thumbColor: const Color(0xFF2A7F67), // Thumb color for consistency
-          onChanged: (value) {
+          activeColor: const Color(0xFF66C3A7),
+          thumbColor: const Color(0xFF2A7F67),
+          onChanged: (v) {
             setState(() {
-              waterConsumed = double.parse(data.toString());
+              waterConsumed = v;
               waterIntakeProgress = (waterConsumed / 5.0) * 100;
             });
           },
         ),
-        Text('${double.parse(data.toString()) ?? waterConsumed}L / 5.0L'),
+        Text('${value}L / 5.0L'),
       ],
     );
   }
@@ -907,5 +1161,3 @@ Widget _buildMealItem(Map<String, dynamic> meal) {
     ),
   );
 }
-
-

@@ -1,9 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:mylota/widgets/appBar_widget.dart';
 import 'package:mylota/widgets/custom_button.dart';
 import 'package:mylota/widgets/custom_input_decorator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ChallengePage extends StatefulWidget {
   @override
@@ -21,6 +24,10 @@ class _ChallengePageState extends State<ChallengePage> {
   String? selectedTask;
   Map<String, int> rememberedPerDay = {};
 
+  bool showCongratsImage = false;
+  String congratsImagePath = 'assets/images/congrts.png'; // or whichever path you want
+  double congratsImageScale = 0.5; // For animation
+
   @override
   void initState() {
     super.initState();
@@ -28,24 +35,51 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   Future<void> _fetchWeeklyTasks() async {
-    setState(() {
-      isLoadingTasks = true;
-    });
-    final doc = await FirebaseFirestore.instance
-        .collection('to-do-lists')
-        .doc('weekly')
-        .get();
-    if (doc.exists) {
-      final data = doc.data()!;
-      setState(() {
-        weeklyTasks = data.map((key, value) =>
-            MapEntry(key, List<String>.from(value as List)));
-        isLoadingTasks = false;
-      });
-    } else {
-      setState(() {
-        isLoadingTasks = false;
-      });
+    setState(() { isLoadingTasks = true; });
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      setState(() { isLoadingTasks = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You must be logged in to view your to-do list.')),
+      );
+      return;
+    }
+
+    try {
+      final userDoc = FirebaseFirestore.instance.collection('todo-goals').doc(user.uid);
+      final doc = await userDoc.get();
+      if (doc.exists && doc.data() != null && doc.data()!.isNotEmpty) {
+        final data = doc.data()!;
+        Map<String, List<String>> groupedTasks = {};
+
+        if (data['tasks'] is List) {
+          for (var task in data['tasks']) {
+            if (task is Map && task['reminder-date'] != null && task['title'] != null) {
+              final date = task['reminder-date'].toString().trim();
+              final title = task['title'].toString().trim();
+              if (date.isNotEmpty && title.isNotEmpty) {
+                groupedTasks.putIfAbsent(date, () => []).add(title);
+              }
+            }
+          }
+        }
+
+        setState(() {
+          weeklyTasks = groupedTasks;
+          isLoadingTasks = false;
+        });
+      } else {
+        setState(() { isLoadingTasks = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No to-do data found for your account.')),
+        );
+      }
+    } catch (e) {
+      setState(() { isLoadingTasks = false; });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading to-do data: $e')),
+      );
     }
   }
 
@@ -216,12 +250,25 @@ class _ChallengePageState extends State<ChallengePage> {
               "Score: $score / ${weeklyTasks.values.expand((x) => x).length}",
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            if (selectedDateKey != null && weeklyTasks[selectedDateKey!] != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  "Tasks for ${_formattedDateLabel(selectedDateKey!)}: ${weeklyTasks[selectedDateKey!]!.join(', ')}",
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+            //if (selectedDateKey != null && weeklyTasks[selectedDateKey!] != null)
+              // Padding(
+              //   padding: const EdgeInsets.only(top: 8.0),
+              //   child: Text(
+              //     "Tasks for ${_formattedDateLabel(selectedDateKey!)}: ${weeklyTasks[selectedDateKey!]!.join(', ')}",
+              //     style: const TextStyle(fontSize: 13, color: Colors.grey),
+              //   ),
+              // ),
+            if (showCongratsImage)
+              Center(
+                child: AnimatedScale(
+                  scale: congratsImageScale,
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.elasticOut,
+                  child: Image.asset(
+                    congratsImagePath,
+                    width: 180,
+                    height: 180,
+                  ),
                 ),
               ),
           ],
@@ -235,7 +282,6 @@ class _ChallengePageState extends State<ChallengePage> {
 
     final dateKey = selectedDateKey!;
     final userTask = selectedTask!.trim().toLowerCase();
-
     final taskGoalList = weeklyTasks[dateKey];
 
     bool correct = taskGoalList != null &&
@@ -246,7 +292,17 @@ class _ChallengePageState extends State<ChallengePage> {
         userAnswers.add("$dateKey:$userTask");
         score++;
         rememberedPerDay[dateKey] = (rememberedPerDay[dateKey] ?? 0) + 1;
-        _showTrophyDialog();
+
+        // Optionally update Firestore user score here
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .update({'score': score});
+        }
+
+        _showCongratsImage();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Correct! Task remembered.")),
         );
@@ -256,10 +312,42 @@ class _ChallengePageState extends State<ChallengePage> {
           const SnackBar(content: Text("Incorrect. That task does not match the day's to-do list.")),
         );
       }
-      // Reset fields after submit
       selectedDateKey = null;
       selectedTask = null;
       _taskController.clear();
+    });
+  }
+
+  void _showCongratsImage() {
+    // Randomly choose between two images if you want
+    final images = [
+      'assets/images/congrts.png',
+      'assets/images/congrts2.png',
+    ];
+    final randomIndex = Random().nextInt(images.length);
+
+    setState(() {
+      congratsImagePath = images[randomIndex];
+      showCongratsImage = true;
+      congratsImageScale = 0.5;
+    });
+
+    // Animate scale up
+    Future.delayed(const Duration(milliseconds: 50), () {
+      if (mounted) {
+        setState(() {
+          congratsImageScale = 2.0;
+        });
+      }
+    });
+
+    // Hide after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          showCongratsImage = false;
+        });
+      }
     });
   }
 
@@ -296,6 +384,7 @@ class _ChallengePageState extends State<ChallengePage> {
   }
 
   Widget _buildLeaderboard() {
+    final currentUser = FirebaseAuth.instance.currentUser;
     return Card(
       color: const Color(0xFF2A7F67),
       elevation: 4,
@@ -310,38 +399,55 @@ class _ChallengePageState extends State<ChallengePage> {
               "Leaderboard",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            ListTile(
-              leading: const Icon(Icons.emoji_events, color: Colors.amber),
-              title: const Text(
-                "You",
-                style: TextStyle(color: Colors.white),
-              ),
-              trailing: Text(
-                "Progress: $progressPercent%",
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-            const ListTile(
-              leading: Icon(Icons.emoji_events, color: Colors.grey),
-              title: Text(
-                "User456",
-                style: TextStyle(color: Colors.white),
-              ),
-              trailing: Text(
-                "Score: 40",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            const ListTile(
-              leading: Icon(Icons.emoji_events, color: Colors.brown),
-              title: Text(
-                "User789",
-                style: TextStyle(color: Colors.white),
-              ),
-              trailing: Text(
-                "Score: 38",
-                style: TextStyle(color: Colors.white),
-              ),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                final users = snapshot.data!.docs;
+                // Sort users by score descending
+                users.sort((a, b) {
+                  final aScore = (a.data() as Map<String, dynamic>)['score'] ?? 0;
+                  final bScore = (b.data() as Map<String, dynamic>)['score'] ?? 0;
+                  return bScore.compareTo(aScore);
+                });
+                return Column(
+                  children: users.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final uid = data['uid'] ?? '';
+                    final name = '${data['firstname'] ?? ''} ${data['lastname'] ?? ''}'.trim();
+                    final score = data['score'] ?? 0;
+
+                    // Mask other users' names
+                    String displayName;
+                    if (currentUser != null && currentUser.uid == uid) {
+                      displayName = name.isNotEmpty ? name : "You";
+                    } else {
+                      // Mask: show first letter + *** + last letter (if available)
+                      if (name.isNotEmpty && name.length > 2) {
+                        displayName = '${name[0]}***${name[name.length - 1]}';
+                      } else if (name.isNotEmpty) {
+                        displayName = '${name[0]}***';
+                      } else {
+                        displayName = "User***";
+                      }
+                    }
+
+                    return ListTile(
+                      leading: const Icon(Icons.emoji_events, color: Colors.amber),
+                      title: Text(
+                        displayName,
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      trailing: Text(
+                        "Score: $score",
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),
@@ -349,37 +455,37 @@ class _ChallengePageState extends State<ChallengePage> {
     );
   }
 
-  void launchEmail({
-    required String toEmail,
-    String subject = '',
-    String body = '',
-  }) async {
-    final gmailUrl = Uri.parse(
-      "googlegmail://co?to=$toEmail&subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}"
-    );
-    final mailtoUrl = Uri(
-      scheme: 'mailto',
-      path: toEmail,
-      queryParameters: {
-        'subject': subject,
-        'body': body,
-      },
-    );
+  // void launchEmail({
+  //   required String toEmail,
+  //   String subject = '',
+  //   String body = '',
+  // }) async {
+  //   final gmailUrl = Uri.parse(
+  //     "googlegmail://co?to=$toEmail&subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}"
+  //   );
+  //   final mailtoUrl = Uri(
+  //     scheme: 'mailto',
+  //     path: toEmail,
+  //     queryParameters: {
+  //       'subject': subject,
+  //       'body': body,
+  //     },
+  //   );
 
-    // Try to launch Gmail app
-    if (await canLaunchUrl(gmailUrl)) {
-      await launchUrl(gmailUrl);
-    } else if (await canLaunchUrl(mailtoUrl)) {
-      // Fallback to default mail client
-      await launchUrl(mailtoUrl);
-    } else {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No email app found. Please install or set up an email app.')),
-        );
-      }
-    }
-  }
+  //   // Try to launch Gmail app
+  //   if (await canLaunchUrl(gmailUrl)) {
+  //     await launchUrl(gmailUrl);
+  //   } else if (await canLaunchUrl(mailtoUrl)) {
+  //     // Fallback to default mail client
+  //     await launchUrl(mailtoUrl);
+  //   } else {
+  //     if (context.mounted) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('No email app found. Please install or set up an email app.')),
+  //       );
+  //     }
+  //   }
+  // }
 
   List<Map<String, String>> get weekDaysWithDates {
     final now = DateTime.now();

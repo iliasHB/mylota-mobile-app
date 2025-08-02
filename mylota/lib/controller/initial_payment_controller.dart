@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:http/http.dart' as http;
 
 Future<PaystackResponse?> createPaystackTransaction(String email, String amount) async {
