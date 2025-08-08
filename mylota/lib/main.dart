@@ -1,8 +1,10 @@
 // import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 // import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:mylota/core/usecase/provider/todo_schedule_provider.dart';
 import 'package:mylota/firebase_options.dart';
@@ -85,118 +87,118 @@ class ErrorWrapper extends StatelessWidget {
   }
 
   Future<void> _initializeApp() async {
-//     try {
-//       WidgetsFlutterBinding.ensureInitialized();
-//       print('✅ Flutter binding initialized');
-//
-//       // ✅ Initialize PrefUtils FIRST
-//       try {
-//         await PrefUtils.init();
-//         print('✅ PrefUtils initialized');
-//       } catch (e) {
-//         print('⚠️ PrefUtils initialization failed: $e');
-//       }
-//
-//       // Initialize Stripe with error handling
-//       try {
-//         Stripe.publishableKey = 'pk_test_51Rku0K4GO9W81Cm2Caa3OGRHu90v3KUHTd1QeWNhkmHhp2YXAuYhAX1o5Cw014iB0CiiDcob48pfA7TRFcyFpejc00DQOyiL4V';
-//         await Stripe.instance.applySettings();
-//         print('✅ Stripe initialized successfully');
-//       } catch (e) {
-//         print('⚠️ Stripe initialization failed: $e');
-//       }
-//
-//       // Initialize providers
-//       final waterReminderProvider = WaterReminderProvider();
-//       final mealReminderProvider = meal.MealPlannerProvider(); // ✅ This should work now
-//       final todoReminderProvider = ToDoScheduleProvider();
-//       print('✅ Providers initialized');
-//
-//       // Initialize NotificationService with error handling
-//       try {
-//         NotificationService.initializeNotification((String? payload) {
-//           if (payload == null) return;
-//
-//           if (payload.startsWith('mealReminderTap')) {
-//             final parts = payload.split('|');
-//             final mealType = parts.length > 1 ? parts[1] : 'breakfast';
-//             mealReminderProvider.markMealAsDoneForToday(mealType);
-//           }
-//
-//           if (payload == 'waterReminderTap') {
-//             waterReminderProvider.markAsDoneForToday();
-//           }
-//
-//           if (payload == 'toDoReminderTap') {
-//             final parts = payload.split('|');
-//             final todoType = parts.length > 1 ? parts[1] : '';
-//             todoReminderProvider.markToDoAsDoneForToday(todoType);
-//           }
-//         });
-//         print('✅ Notification service initialized');
-//       } catch (e) {
-//         print('⚠️ Notification service failed: $e');
-//       }
-//
-//       // Request permissions
-//       try {
-//         await requestPermissions();
-//         print('✅ Permissions requested');
-//       } catch (e) {
-//         print('⚠️ Permission request failed: $e');
-//       }
-// // Initialize alarm service
-//       try {
-//          await AndroidAlarmManager.initialize();
-//         print('✅ Alarm service initialized');
-//       } catch (e) {
-//         print('⚠️ Alarm service failed: $e');
-//       }
-//       // Initialize Firebase FIRST
-//       try {
-//         await Firebase.initializeApp(
-//           options: DefaultFirebaseOptions.currentPlatform,
-//         );
-//         print('✅ Firebase initialized in main app');
-//       } catch (e) {
-//         print('❌ Firebase initialization failed: $e');
-//         throw Exception('Firebase initialization failed: $e');
-//       }
-//
-//       // ✅ Wait for Firebase to be fully ready
-//       await Future.delayed(const Duration(seconds: 3));
-//
-//       // Initialize background service AFTER Firebase is ready
-//       try {
-//         final service = FlutterBackgroundService();
-//         bool isRunning = await service.isRunning();
-//
-//         if (!isRunning) {
-//           print('🔄 Starting background service...');
-//           await initializeService();
-//
-//           // ✅ Verify service started successfully
-//           await Future.delayed(const Duration(seconds: 2));
-//           bool isNowRunning = await service.isRunning();
-//
-//           if (isNowRunning) {
-//             print('✅ Background service started successfully');
-//           } else {
-//             print('⚠️ Background service failed to start properly');
-//           }
-//         } else {
-//           print('✅ Background service already running');
-//         }
-//       } catch (e) {
-//         print('⚠️ Background service failed: $e');
-//         // Continue without background service
-//       }
-//
-//       print('✅ App initialization completed successfully');
-//     } catch (e) {
-//       print('❌ App initialization failed: $e');
-//       rethrow;
-//     }
+    try {
+      WidgetsFlutterBinding.ensureInitialized();
+      print('✅ Flutter binding initiTealized');
+
+      // ✅ Initialize PrefUtils FIRST
+      try {
+        await PrefUtils.init();
+        print('✅ PrefUtils initialized');
+      } catch (e) {
+        print('⚠️ PrefUtils initialization failed: $e');
+      }
+
+      // Initialize Stripe with error handling
+      try {
+        Stripe.publishableKey = 'pk_test_51Rku0K4GO9W81Cm2Caa3OGRHu90v3KUHTd1QeWNhkmHhp2YXAuYhAX1o5Cw014iB0CiiDcob48pfA7TRFcyFpejc00DQOyiL4V';
+        await Stripe.instance.applySettings();
+        print('✅ Stripe initialized successfully');
+      } catch (e) {
+        print('⚠️ Stripe initialization failed: $e');
+      }
+
+      // Initialize providers
+      final waterReminderProvider = WaterReminderProvider();
+      final mealReminderProvider = meal.MealPlannerProvider(); // ✅ This should work now
+      final todoReminderProvider = ToDoScheduleProvider();
+      print('✅ Providers initialized');
+
+      // Initialize NotificationService with error handling
+      try {
+        NotificationService.initializeNotification((String? payload) {
+          if (payload == null) return;
+
+          if (payload.startsWith('mealReminderTap')) {
+            final parts = payload.split('|');
+            final mealType = parts.length > 1 ? parts[1] : 'breakfast';
+            mealReminderProvider.markMealAsDoneForToday(mealType);
+          }
+
+          if (payload == 'waterReminderTap') {
+            waterReminderProvider.markAsDoneForToday();
+          }
+
+          if (payload == 'toDoReminderTap') {
+            final parts = payload.split('|');
+            final todoType = parts.length > 1 ? parts[1] : '';
+            todoReminderProvider.markToDoAsDoneForToday(todoType);
+          }
+        });
+        print('✅ Notification service initialized');
+      } catch (e) {
+        print('⚠️ Notification service failed: $e');
+      }
+
+      // Request permissions
+      try {
+        await requestPermissions();
+        print('✅ Permissions requested');
+      } catch (e) {
+        print('⚠️ Permission request failed: $e');
+      }
+// Initialize alarm service
+      try {
+         await AndroidAlarmManager.initialize();
+        print('✅ Alarm service initialized');
+      } catch (e) {
+        print('⚠️ Alarm service failed: $e');
+      }
+      // Initialize Firebase FIRST
+      try {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+        print('✅ Firebase initialized in main app');
+      } catch (e) {
+        print('❌ Firebase initialization failed: $e');
+        throw Exception('Firebase initialization failed: $e');
+      }
+
+      // ✅ Wait for Firebase to be fully ready
+      await Future.delayed(const Duration(seconds: 3));
+
+      // Initialize background service AFTER Firebase is ready
+      try {
+        final service = FlutterBackgroundService();
+        bool isRunning = await service.isRunning();
+
+        if (!isRunning) {
+          print('🔄 Starting background service...');
+          await initializeService();
+
+          // ✅ Verify service started successfully
+          await Future.delayed(const Duration(seconds: 2));
+          bool isNowRunning = await service.isRunning();
+
+          if (isNowRunning) {
+            print('✅ Background service started successfully');
+          } else {
+            print('⚠️ Background service failed to start properly');
+          }
+        } else {
+          print('✅ Background service already running');
+        }
+      } catch (e) {
+        print('⚠️ Background service failed: $e');
+        // Continue without background service
+      }
+
+      print('✅ App initialization completed successfully');
+    } catch (e) {
+      print('❌ App initialization failed: $e');
+      rethrow;
+    }
   }
 }
 
