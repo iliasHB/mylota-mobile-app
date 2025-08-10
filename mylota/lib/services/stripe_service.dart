@@ -1,3 +1,76 @@
+import 'dart:convert';
+
+import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:http/http.dart' as http;
+import 'package:mylota/utils/constants.dart';
+
+import '../models/payment_intent.dart';
+
+class StripeService {
+  StripeService._();
+
+  static final StripeService instance = StripeService._();
+
+  Future<void> makePayment () async {
+    try {
+      PaymentIntentModel? result = await createPaymentIntent(10, "usd");
+      if(result?.clientSecret == null) return;
+      await Stripe.instance.initPaymentSheet(
+          paymentSheetParameters: SetupPaymentSheetParameters(
+            paymentIntentClientSecret: result?.clientSecret,
+            merchantDisplayName: "Habeeb Soliu"
+          ));
+      await processPayment();
+    } catch (e){
+      print(e);
+    }
+  }
+
+  Future<PaymentIntentModel?> createPaymentIntent(int amount, String currency) async {
+    try {
+      Map<String, dynamic> data = {
+        "amount": calculateAmount(amount),
+        "currency": currency,
+      };
+
+      final response = await http.post(
+        Uri.parse('https://api.stripe.com/v1/payment_intents'),
+        body: data,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': 'Bearer $stripeSecretKey', // Replace with your key
+        },
+      );
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final jsonData = jsonDecode(response.body);
+        return PaymentIntentModel.fromJson(jsonData);
+      }
+      // if(response.body != null){
+      //   print(response.body);
+      //   return response.body;
+      // }
+      return null;
+    } catch(e){
+      print(e);
+    }
+    return null;
+  }
+
+  Future<void> processPayment() async{
+    try {
+      await Stripe.instance.presentPaymentSheet();
+    } catch (e){
+      print(e);
+    }
+  }
+
+  String calculateAmount (int amount) {
+    int calc = amount * 100;
+    return calc.toString();
+  }
+}
+
+
 // import 'dart:convert';
 // import 'package:flutter/material.dart';
 // // import 'package:flutter_stripe/flutter_stripe.dart';

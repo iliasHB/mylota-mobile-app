@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mylota/screens/paystack_web_view.dart';
 import '../controller/initial_payment_controller.dart';
+import '../services/stripe_service.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
 
@@ -268,6 +269,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
 
   // New Stripe payment method
   void initiateStripePayment() async {
+    StripeService.instance.makePayment();
     // setState(() {
     //   isProcessing = true;
     // });

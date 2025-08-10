@@ -9,6 +9,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:mylota/core/usecase/provider/todo_schedule_provider.dart';
 import 'package:mylota/firebase_options.dart';
 import 'package:mylota/screens/splash_screen.dart';
+import 'package:mylota/utils/constants.dart';
 import 'package:mylota/utils/permission_util.dart';
 import 'package:mylota/utils/pref_util.dart';
 import 'package:mylota/widgets/exercise_goal.dart';
@@ -101,7 +102,7 @@ class ErrorWrapper extends StatelessWidget {
 
       // Initialize Stripe with error handling
       try {
-        Stripe.publishableKey = 'pk_test_51Rku0K4GO9W81Cm2Caa3OGRHu90v3KUHTd1QeWNhkmHhp2YXAuYhAX1o5Cw014iB0CiiDcob48pfA7TRFcyFpejc00DQOyiL4V';
+        Stripe.publishableKey = stripePublicKey;
         await Stripe.instance.applySettings();
         print('✅ Stripe initialized successfully');
       } catch (e) {
