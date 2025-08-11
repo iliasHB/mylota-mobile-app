@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/stripe_service.dart';
+import '../core/services/stripe_service.dart';
 
 class PaymentScreen extends StatefulWidget {
   final double amount;

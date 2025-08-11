@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../controller/register_controller.dart';
-import '../controller/verify_payment_controller.dart';
+import '../core/services/verify_payment_service.dart';
 import '../widgets/payment_alert.dart';
 
 class PayStackWebView extends StatefulWidget {

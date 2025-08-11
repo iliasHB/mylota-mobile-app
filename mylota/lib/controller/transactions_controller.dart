@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import 'verify_payment_controller.dart';
+import '../core/services/verify_payment_service.dart';
 
 class TransactionController {
   static Future<void> saveTransactions(DataModel data) async {

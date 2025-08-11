@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/task.dart';
+import '../../models/task.dart';
 
 class TaskService {
   static const String _key = "weekly_tasks";

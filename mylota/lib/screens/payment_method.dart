@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:mylota/screens/paystack_web_view.dart';
-import '../controller/initial_payment_controller.dart';
-import '../services/stripe_service.dart';
+import '../core/services/initial_payment_service.dart';
+import '../core/services/stripe_service.dart';
 import '../utils/styles.dart';
 import '../widgets/custom_button.dart';
 
@@ -149,7 +149,7 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                     Row(
                       children: [
                         Text(
-                          widget.price,
+                          "\$" + widget.price,
                           style: AppStyle.cardSubtitle
                               .copyWith(color: Colors.green),
                         ),
@@ -198,8 +198,8 @@ class _PaymentGatewayState extends State<PaymentGateway> {
                                 widget.firstname!,
                                 widget.lastname!);
                           } else if (isStripeChecked) {
+                            initiateStripePayment(widget.email, widget.price, context);
                             // Process Stripe payment
-                            initiateStripePayment();
                           }
                         },
                       ),
@@ -212,6 +212,23 @@ class _PaymentGatewayState extends State<PaymentGateway> {
         )),
       ),
     );
+  }
+
+  void initiateStripePayment(String email, String price, BuildContext context){
+    try {
+      setState(() {
+        isProcessing = true;
+      });
+      StripeService.instance.makePayment(
+          email, price, context);
+    } catch(e){
+      print("Paystack error: $e");
+      _showErrorSnackBar("Payment failed. Please try again.");
+    } finally {
+      setState(() {
+        isProcessing = false;
+      });
+    }
   }
 
   // Existing Paystack payment method (renamed for clarity)
@@ -267,133 +284,73 @@ class _PaymentGatewayState extends State<PaymentGateway> {
     }
   }
 
-  // New Stripe payment method
-  void initiateStripePayment() async {
-    StripeService.instance.makePayment();
-    // setState(() {
-    //   isProcessing = true;
-    // });
-    //
-    // try {
-    //   // Convert price string to double (remove currency symbols if any)
-    //   final amount = double.tryParse(widget.price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0;
-    //   final amountInCents = (amount * 100).round(); // Stripe expects amount in cents
-    //
-    //   // Create payment intent
-    //   final billingDetails = BillingDetails(
-    //     email: widget.email,
-    //     name: '${widget.firstname} ${widget.lastname}',
-    //     address: Address(
-    //       country: widget.country ?? 'US',
-    //       city: null,
-    //       line1: widget.address,
-    //       line2: null,
-    //       postalCode: null,
-    //       state: null,
-    //     ),
-    //   );
-    //
-    //   // Initialize payment sheet
-    //   await Stripe.instance.initPaymentSheet(
-    //     paymentSheetParameters: SetupPaymentSheetParameters(
-    //       paymentIntentClientSecret: await _createPaymentIntent(amountInCents, 'usd'),
-    //       style: ThemeMode.system,
-    //       merchantDisplayName: 'Mylota Fitness',
-    //       billingDetails: billingDetails,
-    //     ),
-    //   );
-    //
-    //   // Present payment sheet
-    //   await Stripe.instance.presentPaymentSheet();
-    //
-    //   // Payment successful
-    //   _showSuccessSnackBar("Payment successful!");
-    //
-    //   // Handle successful payment (save to database, navigate, etc.)
-    //   await _handleSuccessfulPayment();
-    //
-    // } on StripeException catch (e) {
-    //   print('Stripe error: $e');
-    //   if (e.error.code != FailureCode.Canceled) {
-    //     _showErrorSnackBar('Payment failed: ${e.error.localizedMessage}');
-    //   }
-    // } catch (e) {
-    //   print('Payment error: $e');
-    //   _showErrorSnackBar('Payment failed. Please try again.');
-    // } finally {
-    //   setState(() {
-    //     isProcessing = false;
-    //   });
-    // }
-  }
-
-  // Create payment intent (you'll need to implement this on your backend)
-  Future<String> _createPaymentIntent(int amount, String currency) async {
-    try {
-      // Use your actual IP address from ipconfig
-      const String backendUrl = 'http://10.0.2.2:8081';
-      
-      print('🔄 Attempting to connect to: $backendUrl/create-payment-intent');
-      print('💰 Amount: $amount cents');
-      print('💱 Currency: $currency');
-      print('📧 Email: ${widget.email}');
-      
-      final requestBody = {
-        'amount': amount,
-        'currency': currency,
-        'email': widget.email,
-        'description': widget.description,
-        'metadata': {
-          'type': widget.type,
-          'firstname': widget.firstname ?? '',
-          'lastname': widget.lastname ?? '',
-        }
-      };
-      
-      print('📤 Request body: ${json.encode(requestBody)}');
-      
-      final response = await http.post(
-        Uri.parse('$backendUrl/create-payment-intent'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: json.encode(requestBody),
-      ).timeout(Duration(seconds: 60)); // Increase timeout to 60 seconds
-
-      print('💳 Payment intent request sent to: $backendUrl/create-payment-intent');
-      print('📊 Response status: ${response.statusCode}');
-      print('📊 Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        print('✅ Payment intent created successfully');
-        print('🔑 Client secret: ${data['client_secret'].substring(0, 20)}...');
-        return data['client_secret'];
-      } else {
-        print('❌ Server error: ${response.statusCode} - ${response.body}');
-        throw Exception('Server returned ${response.statusCode}: ${response.body}');
-      }
-    } catch (e) {
-      print('❌ Error creating payment intent: $e');
-      print('🔍 Error type: ${e.runtimeType}');
-      rethrow; // Re-throw to maintain the original error
-    }
-  }
-
-  Future<void> _handleSuccessfulPayment() async {
-    // TODO: Implement your success logic here
-    // - Save payment record to database
-    // - Update user subscription status
-    // - Navigate to success screen
-    // - Send confirmation email, etc.
-    
-    print('Payment successful for ${widget.email}');
-    print('Amount: ${widget.price}');
-    print('Type: ${widget.type}');
-    
-    // Navigate back or to success screen
-    Navigator.pop(context, true); // Return true to indicate success
-  }
+  // // Create payment intent (you'll need to implement this on your backend)
+  // Future<String> _createPaymentIntent(int amount, String currency) async {
+  //   try {
+  //     // Use your actual IP address from ipconfig
+  //     const String backendUrl = 'http://10.0.2.2:8081';
+  //
+  //     print('🔄 Attempting to connect to: $backendUrl/create-payment-intent');
+  //     print('💰 Amount: $amount cents');
+  //     print('💱 Currency: $currency');
+  //     print('📧 Email: ${widget.email}');
+  //
+  //     final requestBody = {
+  //       'amount': amount,
+  //       'currency': currency,
+  //       'email': widget.email,
+  //       'description': widget.description,
+  //       'metadata': {
+  //         'type': widget.type,
+  //         'firstname': widget.firstname ?? '',
+  //         'lastname': widget.lastname ?? '',
+  //       }
+  //     };
+  //
+  //     print('📤 Request body: ${json.encode(requestBody)}');
+  //
+  //     final response = await http.post(
+  //       Uri.parse('$backendUrl/create-payment-intent'),
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: json.encode(requestBody),
+  //     ).timeout(Duration(seconds: 60)); // Increase timeout to 60 seconds
+  //
+  //     print('💳 Payment intent request sent to: $backendUrl/create-payment-intent');
+  //     print('📊 Response status: ${response.statusCode}');
+  //     print('📊 Response body: ${response.body}');
+  //
+  //     if (response.statusCode == 200) {
+  //       final data = json.decode(response.body);
+  //       print('✅ Payment intent created successfully');
+  //       print('🔑 Client secret: ${data['client_secret'].substring(0, 20)}...');
+  //       return data['client_secret'];
+  //     } else {
+  //       print('❌ Server error: ${response.statusCode} - ${response.body}');
+  //       throw Exception('Server returned ${response.statusCode}: ${response.body}');
+  //     }
+  //   } catch (e) {
+  //     print('❌ Error creating payment intent: $e');
+  //     print('🔍 Error type: ${e.runtimeType}');
+  //     rethrow; // Re-throw to maintain the original error
+  //   }
+  // }
+  //
+  // Future<void> _handleSuccessfulPayment() async {
+  //   // TODO: Implement your success logic here
+  //   // - Save payment record to database
+  //   // - Update user subscription status
+  //   // - Navigate to success screen
+  //   // - Send confirmation email, etc.
+  //
+  //   print('Payment successful for ${widget.email}');
+  //   print('Amount: ${widget.price}');
+  //   print('Type: ${widget.type}');
+  //
+  //   // Navigate back or to success screen
+  //   Navigator.pop(context, true); // Return true to indicate success
+  // }
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/stripe_service.dart';
+import '../core/services/stripe_service.dart';
 import '../controller/transactions_controller.dart';
-import '../controller/verify_payment_controller.dart'; // Add this import for DataModel
+import '../core/services/verify_payment_service.dart'; // Add this import for DataModel
 
 class PaymentSelectionScreen extends StatefulWidget {
   final double amount;

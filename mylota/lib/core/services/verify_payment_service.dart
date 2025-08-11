@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:mylota/controller/transactions_controller.dart';
+import 'package:mylota/utils/constants.dart';
 
 
 Future<PaystackResponse?> verifyPaystackTransaction(String reference) async {
@@ -11,7 +12,7 @@ Future<PaystackResponse?> verifyPaystackTransaction(String reference) async {
       Uri.parse('https://api.paystack.co/transaction/verify/$reference'),
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer sk_test_e54bf2f6ed0da3e19e8749c2e01961ba62cd13fc', // Replace with your key
+        'Authorization': 'Bearer $payStackSecretKey', // Replace with your key
       },
     );
 

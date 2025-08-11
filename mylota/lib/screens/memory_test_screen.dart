@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/task_service.dart';
+import '../core/services/task_service.dart';
 import '../models/task.dart';
 import '../widgets/appBar_widget.dart';
 

@@ -3,3 +3,7 @@ const String stripePublicKey =
 const String stripeSecretKey =
     "sk_test_51RfTK9GKuOYlVUAY0e8tNTvQczqkrDgW5CSe1bwDS9oNfhlD7TC1yRkyIMVFOHzPu0NJGa1h27ChkyEQXgfVcjcV00FlkIxxWK";
 
+const String payStackPublicKey =
+    "pk_test_51RfTK9GKuOYlVUAYgLKnZcGexSIo3lv2OqPz9lUXinNLquqpreaCVlJNQdhc4bBelZXdJUWQkXtIh79iRLo963kh00Z3t0jNhB";
+const String payStackSecretKey =
+    "sk_test_e54bf2f6ed0da3e19e8749c2e01961ba62cd13fc";
